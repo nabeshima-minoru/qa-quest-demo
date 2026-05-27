@@ -1,101 +1,72 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import BaseButton from '@/components/common/BaseButton';
+import { useGameStore } from '@/lib/gameStore';
+import { hasSavedSession } from '@/lib/storage';
+
+export default function TitlePage() {
+  const hydrate = useGameStore((s) => s.hydrate);
+  const reset = useGameStore((s) => s.reset);
+  const status = useGameStore((s) => s.status);
+  const [hasResume, setHasResume] = useState(false);
+
+  useEffect(() => {
+    hydrate();
+    setHasResume(hasSavedSession());
+  }, [hydrate]);
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+    <main className="min-h-screen flex items-center justify-center px-6 py-12">
+      <div className="max-w-xl w-full text-center space-y-10">
+        <header className="space-y-3">
+          <p className="mono text-[11px] tracking-[0.3em] text-[var(--text-3)] uppercase">
+            QA Quest · Internal Demo
+          </p>
+          <h1 className="serif text-5xl text-[var(--cream)] leading-tight">
+            テスター育成
+            <br />
+            シミュレーション
+          </h1>
+          <p className="text-[var(--text-2)] text-sm leading-relaxed pt-4">
+            50 ターンの選択を通じて、テスターとしてのキャリアを歩み、
+            <br />
+            JSTQB の知識と現場の判断力を養う採用検査ゲーム。
+          </p>
+        </header>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+        <div className="space-y-3 max-w-xs mx-auto">
+          {hasResume && status === 'in_progress' ? (
+            <>
+              <Link href="/game" className="block">
+                <BaseButton fullWidth size="lg">続きから再開</BaseButton>
+              </Link>
+              <BaseButton
+                fullWidth
+                size="md"
+                variant="ghost"
+                onClick={() => {
+                  if (window.confirm('現在の進行を破棄して最初から始めますか？')) {
+                    reset();
+                    window.location.href = '/route-select';
+                  }
+                }}
+              >
+                新しいゲームを始める
+              </BaseButton>
+            </>
+          ) : (
+            <Link href="/route-select" className="block">
+              <BaseButton fullWidth size="lg">ゲームを始める</BaseButton>
+            </Link>
+          )}
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+
+        <footer className="text-[10px] text-[var(--text-3)] mono uppercase tracking-widest">
+          v0.1 · localStorage 保存
+        </footer>
+      </div>
+    </main>
   );
 }

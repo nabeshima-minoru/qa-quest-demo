@@ -1,36 +1,141 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# QA Quest — 社内デモ版
 
-## Getting Started
+ソフトウェアテスター育成シミュレーションゲーム「QA Quest」のフロント完結デモ実装です。
+`docs/claude_code_implementation_brief.md` の指示書に基づいて構築されています。
 
-First, run the development server:
+## 概要
+
+- **50 ターン** のターン制シミュレーション
+- **40 イベント**（案件・学習・トラブル・交流・隠し）からランダム抽選
+- **JSTQB Foundation 級**のサンプル問題（12 問）
+- ロール昇格：テスター → テストリーダー → テストマネージャー → コンサルタント → 部長 → 社長
+- 採用スコア（S / A / B / C / D ランク）算出
+- localStorage で進行保存、リロード後も再開可能
+
+## 技術スタック
+
+| カテゴリ | 採用技術 |
+|---|---|
+| フレームワーク | Next.js 14 (App Router) |
+| 言語 | TypeScript 5 |
+| スタイリング | Tailwind CSS 3 + CSS カスタムプロパティ |
+| 状態管理 | Zustand |
+| 永続化 | localStorage（バックエンド不要） |
+| デプロイ | Vercel |
+
+## セットアップ
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev          # → http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## ビルド
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run build
+npm start            # production サーバー
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+ビルド済み：全 9 ルートが静的生成され、First Load JS ≦ 114KB。
 
-## Learn More
+## ディレクトリ
 
-To learn more about Next.js, take a look at the following resources:
+```
+qa-quest-demo/
+├── app/
+│   ├── page.tsx              # タイトル画面
+│   ├── route-select/         # ルート選択
+│   ├── game/                 # メインゲーム + 昇格モーダル
+│   ├── quiz/                 # JSTQB 問題
+│   ├── score/                # スコア結果
+│   ├── layout.tsx
+│   └── globals.css
+├── components/
+│   ├── game/                 # CharacterPanel / EventCard / ChoiceList / ActionLog
+│   ├── quiz/                 # QuizCard / QuizTimer
+│   ├── score/                # SkillRadar
+│   └── common/               # BaseButton / BaseProgressBar
+├── data/
+│   ├── events.ts             # 40 イベント
+│   ├── questions.ts          # JSTQB 12 問
+│   └── routes.ts             # 6 キャリアルート
+├── lib/
+│   ├── gameStore.ts          # Zustand ストア
+│   ├── gameLogic.ts          # ターン処理・スコア計算
+│   ├── constants.ts          # BALANCE 定数
+│   └── storage.ts            # localStorage ラッパー
+├── styles/
+│   └── tokens.css            # デザイントークン（モック由来）
+└── types/
+    └── index.ts              # 型定義
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Vercel へのデプロイ
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 方法 A: GitHub 連携（推奨）
 
-## Deploy on Vercel
+1. リポジトリを GitHub に push
+2. [Vercel ダッシュボード](https://vercel.com/new) で Import
+3. デフォルト設定のまま Deploy（環境変数なし）
+4. `main` への push で自動再デプロイ
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### 方法 B: Vercel CLI
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npm install -g vercel
+vercel login
+vercel deploy           # プレビュー環境
+vercel --prod           # 本番公開
+```
+
+環境変数は不要です（完全にクライアント完結）。
+
+## ゲームフロー
+
+```
+タイトル (/)
+   ↓ 「ゲームを始める」または「続きから再開」
+ルート選択 (/route-select)
+   ↓ 6 つから 1 つ選んで「このルートで始める」
+メインゲーム (/game)
+   ↓ 各ターンで A〜D を選択 → 「決定する」
+   ↓ EVT-016 / EVT-023 では JSTQB クイズへ
+JSTQB クイズ (/quiz)   ←→  メインゲーム
+   ↓ 50 ターン経過
+スコア結果 (/score)
+   ↓ S / A / B / C / D ランク + スキルレーダー
+```
+
+## バランス調整値の出所
+
+すべての数値は `docs/balance_tuning.md` 第 6 章に準拠：
+
+| 項目 | 値 |
+|---|---|
+| 最大ターン | 50 |
+| 初期所持金 | ¥30,000 |
+| 初期ステータス | tech 25 / comm 25 / analysis 25 / mgmt 15 / ai 15 |
+| EXP 曲線 | `100 × Lv^1.8` |
+| ターン終了ボーナス | +10 EXP |
+| 最適解ボーナス | +30 EXP |
+| スコア重み | jstqb 0.25 / bug 0.30 / choice 0.25 / role 0.20 |
+| ランク境界 | S≥90 / A≥80 / B≥70 / C≥58 / D<58 |
+
+イベントマスター由来の数値は元値の **60%** に縮小済み（指示書 6.1 節）。
+
+## 関連ドキュメント（`../docs/`）
+
+- `claude_code_implementation_brief.md` — 本実装の指示書
+- `balance_tuning.md` — バランス数値の出所
+- `event_master_data.md` — 40 イベント全文
+- `qa_quest_game_mock.html` — ビジュアルリファレンス
+- `frontend_spec.md` / `backend_spec.md` — 設計参考
+
+## スコープ外（実装していないもの）
+
+- バックエンド API / DB
+- ユーザー認証
+- 採用担当ダッシュボード
+- バグ仕込みアプリとの統合
+- AI API 連携
