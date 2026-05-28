@@ -93,6 +93,7 @@ export default function QuizPage() {
       </header>
       {current && (
         <QuizCard
+          key={current.id}
           question={current}
           index={index}
           total={questions.length}

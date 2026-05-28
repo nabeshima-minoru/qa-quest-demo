@@ -119,7 +119,7 @@ export default function GamePage() {
       {/* Role-up Modal */}
       {pendingRoleUp && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-6"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[#2a2520]/40 backdrop-blur-sm px-6"
           onClick={clearRoleUp}
         >
           <div

@@ -1,51 +1,52 @@
 /*──────────────────────────────────────
-  QA QUEST DESIGN TOKENS
-  Source: docs/qa_quest_game_mock.html :root
+  QA QUEST DESIGN TOKENS — LIGHT THEME
+  Warm washi-paper palette
+  (variable names preserved from dark theme for compatibility)
 ──────────────────────────────────────*/
 
 :root {
-  /* Warm dark — sumi ink influence */
-  --ink:       #1A1714;
-  --deep:      #221E1A;
-  --navy:      #2B2722;
-  --card:      #2F2B26;
-  --card2:     #393530;
+  /* Warm light surfaces — washi paper influence */
+  --ink:       #FBF7EE;  /* main page background */
+  --deep:      #F4EEDE;  /* slightly darker surface */
+  --navy:      #EDE6D2;  /* section background */
+  --card:      #FFFFFF;  /* primary card */
+  --card2:     #F7F1E2;  /* alt card / hover state */
 
-  --edge:      rgba(232,222,205,.07);
-  --edge2:     rgba(232,222,205,.14);
+  --edge:      rgba(40, 32, 20, 0.08);
+  --edge2:     rgba(40, 32, 20, 0.16);
 
-  /* Text — warm cream */
-  --cream:     #E8DECD;
-  --text:      #D6CCB9;
-  --text-2:    #998E7C;
-  --text-3:    #5E574B;
+  /* Text — warm dark inks (note: --cream now holds the darkest heading color) */
+  --cream:     #2A2520;  /* main headings / strong text */
+  --text:      #3D362D;  /* body text */
+  --text-2:    #6E6555;  /* muted text */
+  --text-3:    #9C907C;  /* most muted / labels */
 
-  /* Signature accents — bengara red + aged brass */
-  --accent:    #B85C5C;  /* bengara */
+  /* Signature accents — bengara red + aged brass (unchanged) */
+  --accent:    #B85C5C;
   --accent-d:  #944848;
-  --accent-l:  rgba(184,92,92,.14);
-  --accent-gl: rgba(184,92,92,.20);
+  --accent-l:  rgba(184, 92, 92, 0.12);
+  --accent-gl: rgba(184, 92, 92, 0.20);
 
-  --brass:     #9C8456;  /* aged brass (replaces bright gold) */
-  --brass-d:   #7A6843;
-  --brass-l:   rgba(156,132,86,.14);
-  --brass-gl:  rgba(156,132,86,.18);
+  --brass:     #8A7444;  /* slightly darker for light bg legibility */
+  --brass-d:   #6A5733;
+  --brass-l:   rgba(138, 116, 68, 0.12);
+  --brass-gl:  rgba(138, 116, 68, 0.20);
 
-  /* Semantic — all muted earth tones */
-  --success:   #6E8B5A;
-  --success-l: rgba(110,139,90,.14);
-  --warn:      #C28940;
-  --warn-l:    rgba(194,137,64,.14);
-  --danger:    #A85050;
-  --danger-l:  rgba(168,80,80,.14);
-  --info:      #5A7585;
+  /* Semantic — earth tones, tuned for light bg */
+  --success:   #5E7A4A;
+  --success-l: rgba(94, 122, 74, 0.12);
+  --warn:      #B57A30;
+  --warn-l:    rgba(181, 122, 48, 0.14);
+  --danger:    #9C4040;
+  --danger-l:  rgba(156, 64, 64, 0.10);
+  --info:      #4F6675;
 
-  /* Stat colors — all earth tones, same saturation */
-  --st-tech:   #5A7585;  /* slate */
-  --st-comm:   #6E8B5A;  /* sage */
-  --st-anal:   #B89048;  /* ochre */
-  --st-mgmt:   #A0664A;  /* terracotta */
-  --st-ai:     #8A5E7A;  /* wine plum */
+  /* Stat colors — same hues, slightly deeper for light bg */
+  --st-tech:   #4F6675;  /* slate */
+  --st-comm:   #5E7A4A;  /* sage */
+  --st-anal:   #A57728;  /* ochre */
+  --st-mgmt:   #8E5638;  /* terracotta */
+  --st-ai:     #76496A;  /* wine plum */
 
   --r:         10px;
   --r-sm:      6px;
