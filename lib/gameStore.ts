@@ -13,8 +13,11 @@ import {
   pickNextEvent,
 } from '@/lib/gameLogic';
 import { findRoute } from '@/data/routes';
+import { findBossByMilestone, findBossById } from '@/data/bosses';
 import { clearStorage, loadFromStorage, saveToStorage } from '@/lib/storage';
 import type {
+  BossBattleState,
+  BossChoice,
   Choice,
   GameEvent,
   RoleId,
@@ -57,6 +60,10 @@ export interface GameStateSlice {
   pendingQuiz: boolean;
   /** 中間総括ページに遷移すべきか（直近完了したマイルストーンターン: 10/20/30/40） */
   pendingRecap: number | null;
+  /** BOSS 戦進行中の状態。null=非戦闘 */
+  bossBattle: BossBattleState | null;
+  /** 直近 BOSS 戦結果を保持（recap で参照） */
+  lastBossResult: BossBattleState | null;
 
   // 結果
   scoreResult: ScoreResult | null;
@@ -71,6 +78,12 @@ interface GameActions {
   clearRoleUp: () => void;
   clearQuiz: () => void;
   clearRecap: () => void;
+  /** BOSS バトル：選択肢を送信（damage + reaction を pending に格納） */
+  submitBossChoice: (choiceKey: BossChoice['key']) => void;
+  /** BOSS バトル：reaction 確認後に次フェーズへ進む / フェーズ3後は結果確定 */
+  advanceBossPhase: () => void;
+  /** BOSS バトル：結果確定後に終了処理（報酬付与＋recap発火） */
+  finishBoss: () => void;
   reset: () => void;
 }
 
@@ -96,10 +109,20 @@ const initialState: GameStateSlice = {
   pendingRoleUp: null,
   pendingQuiz: false,
   pendingRecap: null,
+  bossBattle: null,
+  lastBossResult: null,
   scoreResult: null,
 };
 
 const RECAP_MILESTONES = [10, 20, 30, 40] as const;
+
+/** BOSS 戦勝敗ボーナス（撃破: 大盤振る舞い、撤退: 申し訳程度） */
+const BOSS_REWARD = {
+  defeatedExp: 250,
+  defeatedWallet: 30000,
+  escapedExp: 60,
+  escapedWallet: 0,
+} as const;
 
 /** ストア state のうち永続化する部分（currentEvent 等は再抽選可能なので除外しても可だが、UX 上保存する） */
 type Persisted = GameStateSlice;
@@ -202,16 +225,29 @@ export const useGameStore = create<GameStateSlice & GameActions>((set, get) => (
       newFlags[choice.effects.flag] = (newFlags[choice.effects.flag] ?? 0) + 1;
     }
 
-    // 9. ターン進行 / 次イベント / クイズ発火 / 総括発火
+    // 9. ターン進行 / 次イベント / クイズ発火 / BOSS発火（総括は BOSS 後に発火）
     const nextTurn = s.currentTurn + 1;
     const completed = nextTurn > BALANCE.MAX_TURNS;
     const pendingQuiz = !!event.quizTrigger;
-    // 完了したターンが 10/20/30/40 なら中間総括を発火（最終ターン50は除外）
+    // 完了したターンが 10/20/30/40 なら BOSS 戦を発火（最終ターン50は除外）
     const finishedTurn = s.currentTurn;
-    const pendingRecap =
-      !completed && (RECAP_MILESTONES as readonly number[]).includes(finishedTurn)
-        ? finishedTurn
-        : null;
+    const isMilestone =
+      !completed && (RECAP_MILESTONES as readonly number[]).includes(finishedTurn);
+    const milestoneBoss = isMilestone ? findBossByMilestone(finishedTurn) : null;
+    const newBossBattle: BossBattleState | null = milestoneBoss
+      ? {
+          bossId: milestoneBoss.id,
+          milestone: finishedTurn,
+          hp: milestoneBoss.maxHp,
+          maxHp: milestoneBoss.maxHp,
+          phase: 1,
+          pending: null,
+          log: [],
+          result: null,
+        }
+      : null;
+    // pendingRecap は BOSS 戦終了後に finishBoss でセット。マイルストーン以外では null
+    const pendingRecap = null;
 
     let nextEvent: GameEvent | null = null;
     let scoreResult: ScoreResult | null = null;
@@ -253,6 +289,7 @@ export const useGameStore = create<GameStateSlice & GameActions>((set, get) => (
       pendingRoleUp,
       pendingQuiz,
       pendingRecap,
+      bossBattle: newBossBattle,
       scoreResult,
     };
 
@@ -290,6 +327,122 @@ export const useGameStore = create<GameStateSlice & GameActions>((set, get) => (
     const s = get();
     set({ ...s, pendingRecap: null });
     persist({ ...s, pendingRecap: null });
+  },
+
+  submitBossChoice: (choiceKey) => {
+    const s = get();
+    if (!s.bossBattle || s.bossBattle.result || s.bossBattle.pending) return;
+    const boss = findBossById(s.bossBattle.bossId);
+    if (!boss) return;
+    const phaseData = boss.phases[s.bossBattle.phase - 1];
+    if (!phaseData) return;
+    const choice = phaseData.choices.find((c) => c.key === choiceKey);
+    if (!choice) return;
+
+    const newHp = Math.max(0, s.bossBattle.hp - choice.damage);
+    const log = [
+      ...s.bossBattle.log,
+      {
+        phase: s.bossBattle.phase,
+        choiceKey: choice.key,
+        choiceText: choice.text,
+        damage: choice.damage,
+        quality: choice.quality,
+      },
+    ];
+
+    const updated: BossBattleState = {
+      ...s.bossBattle,
+      hp: newHp,
+      log,
+      pending: {
+        choiceKey: choice.key,
+        damage: choice.damage,
+        reaction: choice.reaction,
+        quality: choice.quality,
+      },
+    };
+
+    const next = { ...s, bossBattle: updated };
+    set(next);
+    persist(next);
+  },
+
+  advanceBossPhase: () => {
+    const s = get();
+    if (!s.bossBattle || !s.bossBattle.pending) return;
+    const battle = s.bossBattle;
+
+    // HP 0 で勝利確定
+    if (battle.hp <= 0) {
+      const finalized: BossBattleState = {
+        ...battle,
+        pending: null,
+        result: 'defeated',
+      };
+      const next = { ...s, bossBattle: finalized };
+      set(next);
+      persist(next);
+      return;
+    }
+
+    // フェーズ進行
+    const nextPhase = battle.phase + 1;
+    if (nextPhase > 3) {
+      // 3 フェーズ消化、HP残り → 撤退
+      const finalized: BossBattleState = {
+        ...battle,
+        pending: null,
+        result: 'escaped',
+      };
+      const next = { ...s, bossBattle: finalized };
+      set(next);
+      persist(next);
+      return;
+    }
+
+    const advanced: BossBattleState = {
+      ...battle,
+      phase: nextPhase,
+      pending: null,
+    };
+    const next = { ...s, bossBattle: advanced };
+    set(next);
+    persist(next);
+  },
+
+  finishBoss: () => {
+    const s = get();
+    if (!s.bossBattle || !s.bossBattle.result) return;
+    const battle = s.bossBattle;
+
+    // 報酬付与
+    const defeated = battle.result === 'defeated';
+    const expGain = defeated ? BOSS_REWARD.defeatedExp : BOSS_REWARD.escapedExp;
+    const walletGain = defeated
+      ? BOSS_REWARD.defeatedWallet
+      : BOSS_REWARD.escapedWallet;
+    const newTotalExp = s.totalExp + expGain;
+    const { newLevel, spGain } = calcLevelUp(s.level, newTotalExp);
+    const newRole = determineRole(newLevel, s.stats);
+    const pendingRoleUp =
+      newRole !== s.currentRole ? { from: s.currentRole, to: newRole } : null;
+
+    const updated: GameStateSlice = {
+      ...s,
+      totalExp: newTotalExp,
+      level: newLevel,
+      skillPoints: s.skillPoints + spGain,
+      wallet: s.wallet + walletGain,
+      currentRole: newRole,
+      pendingRoleUp: pendingRoleUp ?? s.pendingRoleUp,
+      bossBattle: null,
+      lastBossResult: battle,
+      // BOSS 戦終了後に総括ページへ
+      pendingRecap: battle.milestone,
+    };
+    set(updated);
+    persist(updated);
   },
 
   reset: () => {

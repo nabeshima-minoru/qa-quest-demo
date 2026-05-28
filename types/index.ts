@@ -96,3 +96,73 @@ export interface ScoreResult {
     roleReachedScore: number;
   };
 }
+
+/*──────────────────────────────────────
+  BOSS BATTLE
+──────────────────────────────────────*/
+
+export type BossArchetype =
+  | 'dev_lead'      // 開発リーダー
+  | 'backend_lead'  // バックエンド責任者
+  | 'product_mgr'   // プロダクトマネージャー
+  | 'cto';          // CTO
+
+export interface BossChoice {
+  key: 'A' | 'B' | 'C' | 'D';
+  text: string;
+  damage: number;
+  reaction: string;
+  quality: 'optimal' | 'good' | 'average' | 'poor';
+}
+
+export interface BossPhase {
+  /** ボスの要求／台詞 */
+  demand: string;
+  /** プレイヤーの回答候補 */
+  choices: BossChoice[];
+}
+
+export interface Boss {
+  id: string;
+  archetype: BossArchetype;
+  name: string;
+  title: string;
+  /** どのマイルストーンで登場するか (10/20/30/40) */
+  milestone: number;
+  maxHp: number;
+  /** SVG テーマカラー */
+  themeColor: string;
+  /** バトル開始時の挨拶 */
+  intro: string;
+  /** 撃破時の捨て台詞 */
+  victory: string;
+  /** 撤退（時間切れ）時の台詞 */
+  escape: string;
+  phases: BossPhase[]; // 3 phases
+}
+
+export interface BossChoiceLog {
+  phase: number; // 1-3
+  choiceKey: 'A' | 'B' | 'C' | 'D';
+  choiceText: string;
+  damage: number;
+  quality: BossChoice['quality'];
+}
+
+export interface BossBattleState {
+  bossId: string;
+  milestone: number;
+  hp: number;
+  maxHp: number;
+  /** 現在フェーズ 1〜3 */
+  phase: number;
+  /** 解決待ちの直近選択（次へ進む前のリアクション表示用） */
+  pending: {
+    choiceKey: BossChoice['key'];
+    damage: number;
+    reaction: string;
+    quality: BossChoice['quality'];
+  } | null;
+  log: BossChoiceLog[];
+  result: 'defeated' | 'escaped' | null;
+}

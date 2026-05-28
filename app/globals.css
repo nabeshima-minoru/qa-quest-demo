@@ -130,3 +130,39 @@ h6 {
 .qa-act-emphasis {
   animation: qa-act-pop .5s ease-out;
 }
+
+/*──────────────────────────────────────
+  BOSS BATTLE
+──────────────────────────────────────*/
+
+/* 待機時のかすかな揺らぎ */
+@keyframes qa-boss-idle-anim {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-2px); }
+}
+.qa-boss-idle {
+  animation: qa-boss-idle-anim 3.6s ease-in-out infinite;
+}
+
+/* ダメージを受けたときの揺れ */
+@keyframes qa-boss-hit-anim {
+  0%   { transform: translate(0, 0); filter: brightness(1.4); }
+  10%  { transform: translate(-6px, 0); }
+  20%  { transform: translate(6px, -2px); }
+  30%  { transform: translate(-5px, 1px); }
+  40%  { transform: translate(4px, 0); }
+  60%  { transform: translate(-2px, 0); filter: brightness(1); }
+  100% { transform: translate(0, 0); }
+}
+.qa-boss-hit {
+  animation: qa-boss-hit-anim .5s ease-out;
+}
+
+/* 撃破時のぐったり */
+@keyframes qa-boss-defeated-anim {
+  0%   { transform: translateY(0) rotate(0); opacity: 1; }
+  100% { transform: translateY(8px) rotate(-3deg); opacity: 0.75; }
+}
+.qa-boss-defeated {
+  animation: qa-boss-defeated-anim .8s ease-out forwards;
+}

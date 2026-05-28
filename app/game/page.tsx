@@ -23,6 +23,7 @@ export default function GamePage() {
   const clearRoleUp = useGameStore((s) => s.clearRoleUp);
   const pendingQuiz = useGameStore((s) => s.pendingQuiz);
   const pendingRecap = useGameStore((s) => s.pendingRecap);
+  const bossBattle = useGameStore((s) => s.bossBattle);
   const reset = useGameStore((s) => s.reset);
 
   // 初期化
@@ -30,7 +31,7 @@ export default function GamePage() {
     hydrate();
   }, [hydrate]);
 
-  // 優先度: 完了 > クイズ > 中間総括
+  // 優先度: 完了 > クイズ > BOSS戦 > 中間総括
   useEffect(() => {
     if (status === 'completed') {
       router.push('/score');
@@ -40,10 +41,14 @@ export default function GamePage() {
       router.push('/quiz');
       return;
     }
+    if (bossBattle) {
+      router.push('/boss');
+      return;
+    }
     if (pendingRecap !== null) {
       router.push('/recap');
     }
-  }, [status, pendingQuiz, pendingRecap, router]);
+  }, [status, pendingQuiz, bossBattle, pendingRecap, router]);
 
   if (status === 'idle') {
     return (

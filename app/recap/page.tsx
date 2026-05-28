@@ -4,7 +4,9 @@ import { useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import BaseButton from '@/components/common/BaseButton';
 import BaseProgressBar from '@/components/common/BaseProgressBar';
+import BossPortrait from '@/components/boss/BossPortrait';
 import { BALANCE, STAT_COLORS, STAT_LABELS } from '@/lib/constants';
+import { findBossById } from '@/data/bosses';
 import { useGameStore } from '@/lib/gameStore';
 import type { ChoiceQuality, StatKey, TurnLog } from '@/types';
 
@@ -95,6 +97,7 @@ export default function RecapPage() {
   const level = useGameStore((s) => s.level);
   const currentRole = useGameStore((s) => s.currentRole);
   const status = useGameStore((s) => s.status);
+  const lastBossResult = useGameStore((s) => s.lastBossResult);
 
   useEffect(() => {
     hydrate();
@@ -203,6 +206,11 @@ export default function RecapPage() {
           <span style={{ color: 'var(--text)' }}>{act.subtitle}</span>
         </div>
       </header>
+
+      {/* Boss Result */}
+      {lastBossResult && lastBossResult.milestone === milestone && (
+        <BossResultCard battle={lastBossResult} />
+      )}
 
       {/* Quick Status */}
       <section className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
@@ -386,6 +394,59 @@ function StatusTile({ label, value }: { label: string; value: string }) {
       </div>
       <div className="serif text-base text-[var(--cream)] truncate">{value}</div>
     </div>
+  );
+}
+
+function BossResultCard({ battle }: { battle: NonNullable<ReturnType<typeof useGameStore.getState>['lastBossResult']> }) {
+  const boss = findBossById(battle.bossId);
+  if (!boss) return null;
+  const defeated = battle.result === 'defeated';
+  const totalDamage = battle.maxHp - battle.hp;
+  const optimalCount = battle.log.filter((l) => l.quality === 'optimal').length;
+  const goodCount = battle.log.filter((l) => l.quality === 'good').length;
+
+  return (
+    <section
+      className="border rounded-[var(--r)] p-5 mb-6 flex items-center gap-4"
+      style={{
+        background: `linear-gradient(90deg, ${boss.themeColor}18 0%, var(--card) 70%)`,
+        borderColor: boss.themeColor,
+      }}
+    >
+      <BossPortrait
+        archetype={boss.archetype}
+        color={boss.themeColor}
+        hpRatio={battle.hp / battle.maxHp}
+        defeated={defeated}
+        escaped={!defeated}
+        size={96}
+      />
+      <div className="flex-1 min-w-0 space-y-1">
+        <p
+          className="mono text-[10px] uppercase tracking-[0.3em]"
+          style={{ color: boss.themeColor }}
+        >
+          BOSS Battle · {defeated ? 'Victory' : 'Retreat'}
+        </p>
+        <h3 className="serif text-base text-[var(--cream)]">
+          {boss.title} {boss.name}
+          <span className="ml-2 text-sm" style={{ color: boss.themeColor }}>
+            {defeated ? '撃破' : '撤退'}
+          </span>
+        </h3>
+        <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-[var(--text-2)] mono">
+          <span>
+            与ダメ <span style={{ color: 'var(--cream)' }}>{totalDamage}</span> / {battle.maxHp}
+          </span>
+          <span>
+            最適 <span style={{ color: 'var(--brass)' }}>{optimalCount}</span>
+          </span>
+          <span>
+            良判断 <span style={{ color: 'var(--success)' }}>{goodCount}</span>
+          </span>
+        </div>
+      </div>
+    </section>
   );
 }
 
