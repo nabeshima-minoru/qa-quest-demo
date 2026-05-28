@@ -7,6 +7,7 @@ import CharacterPanel from '@/components/game/CharacterPanel';
 import EventCard from '@/components/game/EventCard';
 import ChoiceList from '@/components/game/ChoiceList';
 import ActionLog from '@/components/game/ActionLog';
+import ActBanner from '@/components/game/ActBanner';
 import BaseButton from '@/components/common/BaseButton';
 import { useGameStore } from '@/lib/gameStore';
 import { BALANCE } from '@/lib/constants';
@@ -82,12 +83,17 @@ export default function GamePage() {
 
           {/* Center: Event + choices */}
           <div className="lg:order-2 space-y-5">
-            <EventCard event={currentEvent} />
+            <ActBanner />
+            <EventCard key={currentEvent.id} event={currentEvent} />
             <div className="bg-[var(--card)] border border-[var(--edge2)] rounded-[var(--r)] p-5">
               <h3 className="text-[11px] uppercase tracking-widest text-[var(--text-3)] mb-3">
                 Choices
               </h3>
-              <ChoiceList choices={currentEvent.choices} onSubmit={handleSubmit} />
+              <ChoiceList
+                key={currentEvent.id}
+                choices={currentEvent.choices}
+                onSubmit={handleSubmit}
+              />
             </div>
           </div>
 

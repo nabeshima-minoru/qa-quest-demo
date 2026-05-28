@@ -80,3 +80,53 @@ h6 {
     text-wrap: balance;
   }
 }
+
+/*──────────────────────────────────────
+  EVENT / ACT PRESENTATION
+──────────────────────────────────────*/
+
+/* 出現アニメーション（全イベント共通の入場） */
+@keyframes qa-evt-fadein {
+  0%   { opacity: 0; transform: translateY(6px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+.qa-evt-card {
+  animation: qa-evt-fadein .35s ease-out;
+}
+
+/* 緊急イベント：周辺のかすかな赤い脈動 */
+@keyframes qa-trouble-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(156, 64, 64, 0.0); }
+  50%      { box-shadow: 0 0 0 4px rgba(156, 64, 64, 0.18); }
+}
+.qa-evt-trouble {
+  animation: qa-evt-fadein .35s ease-out, qa-trouble-pulse 2.4s ease-in-out infinite;
+}
+
+/* 緊急バッジの点滅 */
+@keyframes qa-badge-blink {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: .55; }
+}
+.qa-evt-trouble-badge {
+  animation: qa-badge-blink 1.2s ease-in-out infinite;
+}
+
+/* レアイベント：金色のうっすらした発光 */
+@keyframes qa-rare-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(138, 116, 68, 0.0); }
+  50%      { box-shadow: 0 0 24px 0 rgba(138, 116, 68, 0.20); }
+}
+.qa-evt-rare {
+  animation: qa-evt-fadein .45s ease-out, qa-rare-glow 3s ease-in-out infinite;
+}
+
+/* 幕の切り替わり強調 */
+@keyframes qa-act-pop {
+  0%   { opacity: 0; transform: translateY(-4px); }
+  60%  { opacity: 1; transform: translateY(1px); }
+  100% { transform: translateY(0); }
+}
+.qa-act-emphasis {
+  animation: qa-act-pop .5s ease-out;
+}
