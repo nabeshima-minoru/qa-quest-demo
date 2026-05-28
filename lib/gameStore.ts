@@ -64,6 +64,8 @@ export interface GameStateSlice {
   bossBattle: BossBattleState | null;
   /** 直近 BOSS 戦結果を保持（recap で参照） */
   lastBossResult: BossBattleState | null;
+  /** 全ボス戦の履歴（最終結果ページで参照） */
+  bossHistory: BossBattleState[];
 
   // 結果
   scoreResult: ScoreResult | null;
@@ -111,6 +113,7 @@ const initialState: GameStateSlice = {
   pendingRecap: null,
   bossBattle: null,
   lastBossResult: null,
+  bossHistory: [],
   scoreResult: null,
 };
 
@@ -438,6 +441,11 @@ export const useGameStore = create<GameStateSlice & GameActions>((set, get) => (
       pendingRoleUp: pendingRoleUp ?? s.pendingRoleUp,
       bossBattle: null,
       lastBossResult: battle,
+      // 履歴に追記（同じ milestone がすでにあれば置換、無ければ追加）
+      bossHistory: [
+        ...s.bossHistory.filter((b) => b.milestone !== battle.milestone),
+        battle,
+      ].sort((a, b) => a.milestone - b.milestone),
       // BOSS 戦終了後に総括ページへ
       pendingRecap: battle.milestone,
     };
