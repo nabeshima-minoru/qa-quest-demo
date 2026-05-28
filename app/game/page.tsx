@@ -8,6 +8,7 @@ import EventCard from '@/components/game/EventCard';
 import ChoiceList from '@/components/game/ChoiceList';
 import ActionLog from '@/components/game/ActionLog';
 import ActBanner from '@/components/game/ActBanner';
+import PlayerAvatar from '@/components/game/PlayerAvatar';
 import BaseButton from '@/components/common/BaseButton';
 import { useGameStore } from '@/lib/gameStore';
 import { BALANCE } from '@/lib/constants';
@@ -143,14 +144,20 @@ export default function GamePage() {
               Promotion
             </p>
             <h2 className="serif text-2xl text-[var(--cream)]">ロール昇格！</h2>
-            <div className="text-[var(--text-2)] space-y-1 text-sm">
-              <p className="mono">
-                {BALANCE.ROLES.find((r) => r.id === pendingRoleUp.from)?.name ?? pendingRoleUp.from}
-              </p>
-              <p>↓</p>
-              <p className="serif text-xl text-[var(--brass)]">
-                {BALANCE.ROLES.find((r) => r.id === pendingRoleUp.to)?.name ?? pendingRoleUp.to}
-              </p>
+            <div className="flex items-center justify-center gap-4 py-2">
+              <div className="flex flex-col items-center gap-2 opacity-70">
+                <PlayerAvatar role={pendingRoleUp.from} size={72} />
+                <p className="mono text-[11px] text-[var(--text-2)]">
+                  {BALANCE.ROLES.find((r) => r.id === pendingRoleUp.from)?.name ?? pendingRoleUp.from}
+                </p>
+              </div>
+              <span className="serif text-2xl text-[var(--brass)]">→</span>
+              <div className="flex flex-col items-center gap-2">
+                <PlayerAvatar role={pendingRoleUp.to} size={88} />
+                <p className="serif text-base text-[var(--brass)]">
+                  {BALANCE.ROLES.find((r) => r.id === pendingRoleUp.to)?.name ?? pendingRoleUp.to}
+                </p>
+              </div>
             </div>
             <BaseButton onClick={clearRoleUp} size="md">
               閉じる

@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react';
 import BaseProgressBar from '@/components/common/BaseProgressBar';
+import PlayerAvatar from '@/components/game/PlayerAvatar';
 import { BALANCE, STAT_COLORS, STAT_LABELS, requiredExp } from '@/lib/constants';
 import { useGameStore } from '@/lib/gameStore';
 import type { StatKey } from '@/types';
@@ -31,14 +32,19 @@ export default function CharacterPanel() {
   return (
     <aside className="bg-[var(--card)] border border-[var(--edge2)] rounded-[var(--r)] p-5 space-y-5">
       {/* Header */}
-      <header className="space-y-1 pb-4 border-b border-[var(--edge)]">
-        <div className="text-[11px] uppercase tracking-widest text-[var(--text-3)]">
-          Role
+      <header className="pb-4 border-b border-[var(--edge)]">
+        <div className="flex items-center gap-3">
+          <PlayerAvatar role={currentRole} size={64} />
+          <div className="min-w-0 flex-1">
+            <div className="text-[11px] uppercase tracking-widest text-[var(--text-3)]">
+              Role
+            </div>
+            <h2 className="serif text-lg text-[var(--cream)] leading-tight truncate">
+              {roleDef?.name ?? 'テスター'}
+            </h2>
+          </div>
         </div>
-        <h2 className="serif text-xl text-[var(--cream)]">
-          {roleDef?.name ?? 'テスター'}
-        </h2>
-        <div className="flex items-center justify-between text-xs text-[var(--text-2)] pt-2">
+        <div className="flex items-center justify-between text-xs text-[var(--text-2)] pt-3">
           <span>
             Turn <span className="mono text-[var(--cream)]">{currentTurn}</span>{' '}
             / {BALANCE.MAX_TURNS}
