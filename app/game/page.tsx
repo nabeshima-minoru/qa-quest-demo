@@ -22,6 +22,7 @@ export default function GamePage() {
   const pendingRoleUp = useGameStore((s) => s.pendingRoleUp);
   const clearRoleUp = useGameStore((s) => s.clearRoleUp);
   const pendingQuiz = useGameStore((s) => s.pendingQuiz);
+  const pendingRecap = useGameStore((s) => s.pendingRecap);
   const reset = useGameStore((s) => s.reset);
 
   // 初期化
@@ -29,19 +30,20 @@ export default function GamePage() {
     hydrate();
   }, [hydrate]);
 
-  // 完了したら score へ
+  // 優先度: 完了 > クイズ > 中間総括
   useEffect(() => {
     if (status === 'completed') {
       router.push('/score');
+      return;
     }
-  }, [status, router]);
-
-  // クイズトリガー
-  useEffect(() => {
     if (pendingQuiz) {
       router.push('/quiz');
+      return;
     }
-  }, [pendingQuiz, router]);
+    if (pendingRecap !== null) {
+      router.push('/recap');
+    }
+  }, [status, pendingQuiz, pendingRecap, router]);
 
   if (status === 'idle') {
     return (

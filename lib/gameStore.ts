@@ -55,6 +55,8 @@ export interface GameStateSlice {
   // 演出フラグ
   pendingRoleUp: { from: RoleId; to: RoleId } | null;
   pendingQuiz: boolean;
+  /** 中間総括ページに遷移すべきか（直近完了したマイルストーンターン: 10/20/30/40） */
+  pendingRecap: number | null;
 
   // 結果
   scoreResult: ScoreResult | null;
@@ -68,6 +70,7 @@ interface GameActions {
   recordQuizResult: (correctCount: number, attemptedCount: number) => void;
   clearRoleUp: () => void;
   clearQuiz: () => void;
+  clearRecap: () => void;
   reset: () => void;
 }
 
@@ -92,8 +95,11 @@ const initialState: GameStateSlice = {
   flags: {},
   pendingRoleUp: null,
   pendingQuiz: false,
+  pendingRecap: null,
   scoreResult: null,
 };
+
+const RECAP_MILESTONES = [10, 20, 30, 40] as const;
 
 /** ストア state のうち永続化する部分（currentEvent 等は再抽選可能なので除外しても可だが、UX 上保存する） */
 type Persisted = GameStateSlice;
@@ -196,10 +202,16 @@ export const useGameStore = create<GameStateSlice & GameActions>((set, get) => (
       newFlags[choice.effects.flag] = (newFlags[choice.effects.flag] ?? 0) + 1;
     }
 
-    // 9. ターン進行 / 次イベント / クイズ発火
+    // 9. ターン進行 / 次イベント / クイズ発火 / 総括発火
     const nextTurn = s.currentTurn + 1;
     const completed = nextTurn > BALANCE.MAX_TURNS;
     const pendingQuiz = !!event.quizTrigger;
+    // 完了したターンが 10/20/30/40 なら中間総括を発火（最終ターン50は除外）
+    const finishedTurn = s.currentTurn;
+    const pendingRecap =
+      !completed && (RECAP_MILESTONES as readonly number[]).includes(finishedTurn)
+        ? finishedTurn
+        : null;
 
     let nextEvent: GameEvent | null = null;
     let scoreResult: ScoreResult | null = null;
@@ -240,6 +252,7 @@ export const useGameStore = create<GameStateSlice & GameActions>((set, get) => (
       currentEvent: nextEvent,
       pendingRoleUp,
       pendingQuiz,
+      pendingRecap,
       scoreResult,
     };
 
@@ -271,6 +284,12 @@ export const useGameStore = create<GameStateSlice & GameActions>((set, get) => (
     const s = get();
     set({ ...s, pendingQuiz: false });
     persist({ ...s, pendingQuiz: false });
+  },
+
+  clearRecap: () => {
+    const s = get();
+    set({ ...s, pendingRecap: null });
+    persist({ ...s, pendingRecap: null });
   },
 
   reset: () => {
