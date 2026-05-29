@@ -21,21 +21,17 @@ export const routes: Route[] = [
   },
   {
     id: 'eng_pro',
-    name: 'エンジニア系・プロフェッショナル',
-    description: '深い技術知見と緻密な分析で、難案件を着実に解いていく職人型。',
-    initialBonus: { tech: 7, analysis: 6 },
+    name: 'エンジニア系・テストアナリスト',
+    description:
+      'リスク分析と要件読解の深さで、テスト設計の質を一段引き上げる分析職人型。',
+    initialBonus: { tech: 5, analysis: 8 },
   },
   {
-    id: 'mgr_omoto',
-    name: 'マネージャー系・大本モデル',
-    description: '人と組織に寄り添い、チームの信頼を核にプロジェクトを束ねる人情派。',
-    initialBonus: { comm: 7, mgmt: 7 },
-  },
-  {
-    id: 'mgr_ishida',
-    name: 'マネージャー系・石田モデル',
-    description: '経営視点・改革志向で、技術とマネジメントを両輪に変革を推進する戦略家。',
-    initialBonus: { tech: 3, mgmt: 6, comm: 3, ai: 3 },
+    id: 'manager',
+    name: 'マネージャー系',
+    description:
+      '人と組織に寄り添いつつ、技術と経営の両輪を回す統括役。チーム品質の最終責任を担う。',
+    initialBonus: { comm: 5, mgmt: 8, tech: 2 },
   },
 ];
 

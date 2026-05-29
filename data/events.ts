@@ -1476,6 +1476,686 @@ export const events: GameEvent[] = [
       },
     ],
   },
+
+  /*──────────────────────────────────────
+    追加イベント（v2） — 多様性を増やすため新シナリオ群
+  ──────────────────────────────────────*/
+
+  // ── 案件系 ──
+  {
+    id: 'EVT-041',
+    category: 'case',
+    title: '医療系システムのバリデーション',
+    description:
+      '医療機器ベンダーからシステム検証を依頼された。\nFDA 準拠と GxP のトレーサビリティが要求される。\n納期 6 週間、テストケース約 1200 件。',
+    mentorId: null,
+    triggerConditions: { minLevel: 4 },
+    weight: 8,
+    choices: [
+      {
+        key: 'A',
+        text: 'トレーサビリティ・マトリクスを真っ先に組み、要件単位で進捗管理する',
+        quality: 'optimal',
+        isOptimal: true,
+        effects: { tech: 4, analysis: 5, exp: 180, wallet: 36000 },
+      },
+      {
+        key: 'B',
+        text: '機能ベースの分割で淡々と消化していく',
+        quality: 'average',
+        effects: { tech: 3, exp: 90, wallet: 22000 },
+      },
+      {
+        key: 'C',
+        text: 'ピアレビューを徹底し、欠陥の流出を抑える',
+        quality: 'good',
+        effects: { tech: 3, comm: 2, exp: 130, wallet: 22000 },
+      },
+      {
+        key: 'D',
+        text: 'ベンダーに任せられる範囲は委任し、コア部分に集中する',
+        quality: 'good',
+        effects: { mgmt: 3, analysis: 3, exp: 130, wallet: 22000 },
+      },
+    ],
+  },
+  {
+    id: 'EVT-042',
+    category: 'case',
+    title: 'モバイルアプリのストア審査前テスト',
+    description:
+      '新作 iOS / Android アプリのストア審査が来週。\n機能はほぼ完成だが、機種依存のクラッシュが散見される。\n審査落ちは事業計画に直撃する。',
+    mentorId: null,
+    triggerConditions: { minLevel: 3 },
+    weight: 10,
+    choices: [
+      {
+        key: 'A',
+        text: 'クラッシュレポートを優先度順に整理し、TOP10 端末で集中検証',
+        quality: 'optimal',
+        isOptimal: true,
+        effects: { tech: 4, analysis: 4, exp: 180, wallet: 26000 },
+      },
+      {
+        key: 'B',
+        text: '全機種で機能網羅テストを並行実施する',
+        quality: 'average',
+        effects: { tech: 3, exp: 90, wallet: 18000 },
+      },
+      {
+        key: 'C',
+        text: 'クラウド端末ファームでカバレッジを確保する',
+        quality: 'good',
+        effects: { tech: 3, ai: 3, exp: 130, wallet: 18000 },
+      },
+      {
+        key: 'D',
+        text: '審査基準だけ満たし、機種依存は次バージョンで対応',
+        quality: 'suboptimal',
+        effects: { tech: 1, exp: 60, wallet: 18000 },
+      },
+    ],
+  },
+  {
+    id: 'EVT-043',
+    category: 'case',
+    title: 'IoT デバイスのファームウェア検証',
+    description:
+      'スマートロックのファーム更新リリース前。\n物理セキュリティに関わるため、過去最高水準の検証が必要。\n実機環境は 3 セットしかない。',
+    mentorId: null,
+    triggerConditions: { minLevel: 6 },
+    weight: 7,
+    choices: [
+      {
+        key: 'A',
+        text: '実機で典型シナリオ＋シミュレータで境界値を網羅する',
+        quality: 'optimal',
+        isOptimal: true,
+        effects: { tech: 5, analysis: 4, exp: 180, wallet: 32000 },
+      },
+      {
+        key: 'B',
+        text: '実機 3 台に絞って全シナリオを通す',
+        quality: 'average',
+        effects: { tech: 3, exp: 90, wallet: 22000 },
+      },
+      {
+        key: 'C',
+        text: 'OTA 更新ロジックを重点的に検証する',
+        quality: 'good',
+        effects: { tech: 4, exp: 130, wallet: 22000 },
+      },
+      {
+        key: 'D',
+        text: '前バージョンから差分のみを集中テスト',
+        quality: 'good',
+        effects: { analysis: 3, exp: 130, wallet: 22000 },
+      },
+    ],
+  },
+  {
+    id: 'EVT-044',
+    category: 'case',
+    title: 'スタートアップ MVP のリリース支援',
+    description:
+      '創業 3 ヶ月のスタートアップから MVP の品質支援。\nテスター 1 名、開発者 2 名の極小チーム。\nプロダクトの成否そのものが懸かっている。',
+    mentorId: null,
+    triggerConditions: { minLevel: 2 },
+    weight: 9,
+    choices: [
+      {
+        key: 'A',
+        text: 'クリティカルパスに絞り、探索的テストで素早く価値を確認',
+        quality: 'optimal',
+        isOptimal: true,
+        effects: { tech: 3, analysis: 4, comm: 2, exp: 180, wallet: 18000 },
+      },
+      {
+        key: 'B',
+        text: '形式テストを諦め、ユーザーテストで代用する',
+        quality: 'good',
+        effects: { comm: 4, exp: 130, wallet: 14000 },
+      },
+      {
+        key: 'C',
+        text: '網羅テストの簡易版を一気通貫で実施',
+        quality: 'average',
+        effects: { tech: 3, exp: 90, wallet: 14000 },
+      },
+      {
+        key: 'D',
+        text: '工数不足を理由に契約規模の縮小を提案する',
+        quality: 'suboptimal',
+        effects: { mgmt: 2, exp: 60, wallet: 6000 },
+      },
+    ],
+  },
+  {
+    id: 'EVT-045',
+    category: 'case',
+    title: '越境 EC の多言語・多通貨対応テスト',
+    description:
+      'EC サイトの 8 言語・15 通貨展開のリリース直前テスト。\n表記揺れ・通貨換算誤差・税率の差異など、ローカライズ問題が山積。',
+    mentorId: null,
+    triggerConditions: { minLevel: 5 },
+    weight: 7,
+    choices: [
+      {
+        key: 'A',
+        text: 'ローカリゼーション QA フレームを組み、データ駆動で網羅検証',
+        quality: 'optimal',
+        isOptimal: true,
+        effects: { tech: 4, analysis: 4, ai: 2, exp: 180, wallet: 32000 },
+      },
+      {
+        key: 'B',
+        text: '各国スタッフに UI 確認を分担し、現地語の自然さを担保',
+        quality: 'good',
+        effects: { comm: 4, mgmt: 2, exp: 130, wallet: 22000 },
+      },
+      {
+        key: 'C',
+        text: '機械翻訳で大量検査し、人手で抽出確認',
+        quality: 'average',
+        effects: { tech: 2, ai: 3, exp: 90, wallet: 22000 },
+      },
+      {
+        key: 'D',
+        text: '主要 3 言語のみ重点検証し、他は β 公開で集める',
+        quality: 'suboptimal',
+        effects: { tech: 2, exp: 60, wallet: 14000 },
+      },
+    ],
+  },
+
+  // ── 学習系 ──
+  {
+    id: 'EVT-046',
+    category: 'study',
+    title: 'コミュニティ勉強会で初登壇',
+    description:
+      '社外の QA コミュニティから登壇依頼。\n資料作成は週末を 3 回潰す覚悟が要る。\nだが視座が大きく広がる機会でもある。',
+    mentorId: null,
+    triggerConditions: { minLevel: 5 },
+    weight: 6,
+    choices: [
+      {
+        key: 'A',
+        text: '現場の失敗事例を率直に語り、議論を呼び込む',
+        quality: 'optimal',
+        isOptimal: true,
+        effects: { comm: 5, analysis: 3, exp: 180, wallet: -3000 },
+      },
+      {
+        key: 'B',
+        text: '一般論で無難にまとめ、まず登壇経験を積む',
+        quality: 'average',
+        effects: { comm: 3, exp: 90 },
+      },
+      {
+        key: 'C',
+        text: '社内ノウハウを丁寧にまとめ、教科書的に発表',
+        quality: 'good',
+        effects: { comm: 3, analysis: 3, exp: 130 },
+      },
+      {
+        key: 'D',
+        text: '今回は辞退し、観衆として参加する',
+        quality: 'suboptimal',
+        effects: { comm: 1, exp: 60 },
+      },
+    ],
+  },
+  {
+    id: 'EVT-047',
+    category: 'study',
+    title: 'ISO/IEC 25010 の品質特性を学ぶ',
+    description:
+      '品質特性の体系を改めて学び直す機会を得た。\n8 特性 × サブ特性を頭に入れれば、テスト設計の言語化力が一段上がる。',
+    mentorId: null,
+    triggerConditions: {},
+    weight: 5,
+    choices: [
+      {
+        key: 'A',
+        text: '8 特性を自分の言葉で要約し、Notion に体系図を作る',
+        quality: 'optimal',
+        isOptimal: true,
+        effects: { analysis: 5, tech: 2, exp: 180 },
+      },
+      {
+        key: 'B',
+        text: '関心がある特性（性能・セキュリティ）だけ深掘り',
+        quality: 'good',
+        effects: { analysis: 3, tech: 2, exp: 130 },
+      },
+      {
+        key: 'C',
+        text: '読み流し、必要時に都度参照することにする',
+        quality: 'average',
+        effects: { analysis: 2, exp: 90 },
+      },
+      {
+        key: 'D',
+        text: '勉強会の資料を流用して済ませる',
+        quality: 'suboptimal',
+        effects: { exp: 60 },
+      },
+    ],
+  },
+  {
+    id: 'EVT-048',
+    category: 'study',
+    title: '海外カンファレンスをオンラインで視聴',
+    description:
+      'EuroSTAR の動画アーカイブが解放された。\n英語で全 30 セッション。寝不足覚悟だが、世界水準のテスト思想に触れる絶好の機会。',
+    mentorId: null,
+    triggerConditions: { minLevel: 4 },
+    weight: 4,
+    choices: [
+      {
+        key: 'A',
+        text: 'コア 5 セッションを精聴し、社内へ要約を共有',
+        quality: 'optimal',
+        isOptimal: true,
+        effects: { analysis: 4, comm: 3, exp: 180 },
+      },
+      {
+        key: 'B',
+        text: 'ながら見で全セッションを浅く視聴',
+        quality: 'average',
+        effects: { analysis: 2, exp: 90 },
+      },
+      {
+        key: 'C',
+        text: '気になるトピックの登壇者をフォローし議論を継続',
+        quality: 'good',
+        effects: { comm: 3, analysis: 2, exp: 130 },
+      },
+      {
+        key: 'D',
+        text: 'やはり日本語の情報源だけで間に合わせる',
+        quality: 'suboptimal',
+        effects: { exp: 60 },
+      },
+    ],
+  },
+
+  // ── トラブル系 ──
+  {
+    id: 'EVT-049',
+    category: 'trouble',
+    title: '本番 DB の誤更新事故が発覚',
+    description:
+      '深夜、本番 DB に直接 UPDATE が走った形跡。\n影響範囲が不明で、開発者は青ざめている。\nテスト側として、どう動く？',
+    mentorId: null,
+    triggerConditions: { minLevel: 4 },
+    weight: 9,
+    choices: [
+      {
+        key: 'A',
+        text: '影響範囲を再現テストで突き止め、復旧基準を提示する',
+        quality: 'optimal',
+        isOptimal: true,
+        effects: { tech: 5, analysis: 5, exp: 200, wallet: -4000 },
+      },
+      {
+        key: 'B',
+        text: 'まずは原因切り分けを開発者と並走する',
+        quality: 'good',
+        effects: { tech: 3, comm: 3, exp: 130 },
+      },
+      {
+        key: 'C',
+        text: '事故報告書のドラフトを先に整える',
+        quality: 'average',
+        effects: { mgmt: 3, comm: 2, exp: 90 },
+      },
+      {
+        key: 'D',
+        text: 'テスト範囲外として開発者に任せる',
+        quality: 'poor',
+        effects: { exp: 30 },
+      },
+    ],
+  },
+  {
+    id: 'EVT-050',
+    category: 'trouble',
+    title: 'セキュリティ脆弱性の緊急パッチ',
+    description:
+      '依存ライブラリに CVSS 9.1 の脆弱性が公表された。\n24 時間以内に修正・検証してリリースが目標。\n睡眠時間が削れる。',
+    mentorId: null,
+    triggerConditions: { minLevel: 5 },
+    weight: 7,
+    choices: [
+      {
+        key: 'A',
+        text: '影響箇所を特定し、回帰テストはリスクベースで絞り込む',
+        quality: 'optimal',
+        isOptimal: true,
+        effects: { tech: 5, analysis: 4, exp: 200, wallet: -2000 },
+      },
+      {
+        key: 'B',
+        text: 'スモークテスト全実施でリスク全方位カバー',
+        quality: 'good',
+        effects: { tech: 3, exp: 130 },
+      },
+      {
+        key: 'C',
+        text: '夜通しで全回帰テストを通す',
+        quality: 'average',
+        effects: { tech: 2, exp: 90, wallet: -4000 },
+      },
+      {
+        key: 'D',
+        text: 'リスクを許容して翌営業日にずらす',
+        quality: 'poor',
+        effects: { exp: 30 },
+      },
+    ],
+  },
+  {
+    id: 'EVT-051',
+    category: 'trouble',
+    title: '自動テスト基盤が朝から壊滅',
+    description:
+      'CI が真っ赤。\n依存パッケージの破壊的変更で 200 テストがすべて落ちている。\nスプリント終盤、リカバリ時間が無い。',
+    mentorId: null,
+    triggerConditions: { minLevel: 5 },
+    weight: 7,
+    choices: [
+      {
+        key: 'A',
+        text: '影響を切り分け、コア群を優先復旧 → 残りは段階対応で計画化',
+        quality: 'optimal',
+        isOptimal: true,
+        effects: { tech: 5, analysis: 4, mgmt: 2, exp: 200 },
+      },
+      {
+        key: 'B',
+        text: '一括ロールバックし、再アップデートは時期をずらす',
+        quality: 'good',
+        effects: { tech: 3, exp: 130 },
+      },
+      {
+        key: 'C',
+        text: '手動テストを増やしてリリースに間に合わせる',
+        quality: 'average',
+        effects: { tech: 2, exp: 90, wallet: -3000 },
+      },
+      {
+        key: 'D',
+        text: 'CI を一旦無効化して開発を進める',
+        quality: 'poor',
+        effects: { exp: 30 },
+      },
+    ],
+  },
+  {
+    id: 'EVT-052',
+    category: 'trouble',
+    title: 'チームメンバーが体調不良で長期離脱',
+    description:
+      'ベテランメンバーが急病で 2 週間離脱。\n担当領域は深い属人化が進んでおり、肩代わりは容易ではない。',
+    mentorId: null,
+    triggerConditions: { minLevel: 6 },
+    weight: 6,
+    choices: [
+      {
+        key: 'A',
+        text: '残メンバーで業務再分担＋ナレッジ可視化を同時に進める',
+        quality: 'optimal',
+        isOptimal: true,
+        effects: { mgmt: 5, comm: 4, exp: 200 },
+      },
+      {
+        key: 'B',
+        text: 'スコープを絞り、納期再交渉を提案',
+        quality: 'good',
+        effects: { mgmt: 3, comm: 2, exp: 130 },
+      },
+      {
+        key: 'C',
+        text: '自分が穴埋めし、無理にでも回す',
+        quality: 'average',
+        effects: { tech: 2, mgmt: 2, exp: 90, wallet: -2000 },
+      },
+      {
+        key: 'D',
+        text: '外部リソースの一時投入を即座に手配',
+        quality: 'good',
+        effects: { mgmt: 3, exp: 130, wallet: -15000 },
+      },
+    ],
+  },
+
+  // ── 交流系 ──
+  {
+    id: 'EVT-053',
+    category: 'social',
+    title: '後輩テスターのオンボーディング',
+    description:
+      '新卒テスターが配属された。\n知識ゼロからの育成は重い責任だが、教える経験は自分の理解も深める。',
+    mentorId: null,
+    triggerConditions: { minLevel: 4 },
+    weight: 7,
+    choices: [
+      {
+        key: 'A',
+        text: '4 週間の段階的カリキュラムを作り、毎週 1on1 でレビュー',
+        quality: 'optimal',
+        isOptimal: true,
+        effects: { comm: 5, mgmt: 4, analysis: 2, exp: 180 },
+      },
+      {
+        key: 'B',
+        text: 'OJT で実案件に放り込み、走らせながら学ばせる',
+        quality: 'good',
+        effects: { comm: 3, mgmt: 2, exp: 130 },
+      },
+      {
+        key: 'C',
+        text: '社内 wiki を渡し、まず自習してもらう',
+        quality: 'average',
+        effects: { comm: 1, exp: 90 },
+      },
+      {
+        key: 'D',
+        text: '雑用から覚えさせて、本格研修は半年後に',
+        quality: 'poor',
+        effects: { comm: 0, exp: 30 },
+      },
+    ],
+  },
+  {
+    id: 'EVT-054',
+    category: 'social',
+    title: '採用面接の同席',
+    description:
+      'マネージャーから「次の中途面接に同席してほしい」と依頼。\n面接スキルは自分の判断軸を磨くチャンスにもなる。',
+    mentorId: null,
+    triggerConditions: { minLevel: 6 },
+    weight: 5,
+    choices: [
+      {
+        key: 'A',
+        text: '事前にレジュメを精読し、技術評価の質問軸を 5 つ用意',
+        quality: 'optimal',
+        isOptimal: true,
+        effects: { comm: 4, mgmt: 3, analysis: 3, exp: 180 },
+      },
+      {
+        key: 'B',
+        text: '柔らかい雰囲気作りに徹し、人柄を引き出す役回りに',
+        quality: 'good',
+        effects: { comm: 4, exp: 130 },
+      },
+      {
+        key: 'C',
+        text: 'マネージャーの質問にうなずきメインで参加',
+        quality: 'average',
+        effects: { comm: 1, exp: 90 },
+      },
+      {
+        key: 'D',
+        text: '辞退して本業に集中する',
+        quality: 'suboptimal',
+        effects: { exp: 60 },
+      },
+    ],
+  },
+  {
+    id: 'EVT-055',
+    category: 'social',
+    title: '開発チームとの飲み会',
+    description:
+      'リリース後、開発チーム主催の懇親会に誘われた。\n普段の関係性を深める好機ではあるが、家族との時間も犠牲になる。',
+    mentorId: null,
+    triggerConditions: { minLevel: 2 },
+    weight: 5,
+    choices: [
+      {
+        key: 'A',
+        text: '一次会だけ参加して関係性を温め、二次会は辞退',
+        quality: 'optimal',
+        isOptimal: true,
+        effects: { comm: 4, mgmt: 1, exp: 150, wallet: -4000 },
+      },
+      {
+        key: 'B',
+        text: '最後まで付き合い、本音トークでチームに溶け込む',
+        quality: 'good',
+        effects: { comm: 5, exp: 130, wallet: -8000 },
+      },
+      {
+        key: 'C',
+        text: '体調を理由に丁重に欠席する',
+        quality: 'average',
+        effects: { comm: 0, exp: 90 },
+      },
+      {
+        key: 'D',
+        text: '次回のランチ会を逆提案する',
+        quality: 'good',
+        effects: { comm: 3, mgmt: 1, exp: 130 },
+      },
+    ],
+  },
+
+  // ── 隠し系 ──
+  {
+    id: 'EVT-056',
+    category: 'hidden',
+    title: '元同僚からの転職誘い',
+    description:
+      '昔の同僚が、急成長中のスタートアップでテストリードを探していると連絡してきた。\n年収は今の 1.3 倍、ストックオプション付き。',
+    mentorId: null,
+    triggerConditions: { minLevel: 8 },
+    weight: 3,
+    choices: [
+      {
+        key: 'A',
+        text: '誠実に話を聞き、現職で得られない経験を見極める',
+        quality: 'optimal',
+        isOptimal: true,
+        effects: { analysis: 4, comm: 3, exp: 200, wallet: 10000 },
+      },
+      {
+        key: 'B',
+        text: '即座に断る。今の現場で果たすべき役割がある',
+        quality: 'good',
+        effects: { mgmt: 3, exp: 130 },
+      },
+      {
+        key: 'C',
+        text: '上司に相談して、社内ポジション交渉の材料にする',
+        quality: 'good',
+        effects: { comm: 3, mgmt: 2, exp: 130, wallet: 20000 },
+      },
+      {
+        key: 'D',
+        text: '深く考えず、流れに任せて返事を保留',
+        quality: 'suboptimal',
+        effects: { exp: 60 },
+      },
+    ],
+  },
+  {
+    id: 'EVT-057',
+    category: 'hidden',
+    title: '業界誌からインタビュー依頼',
+    description:
+      'QA 専門の Web メディアから、注目テスターとしてインタビュー依頼。\n社内には事前承認が必要で、対応は面倒だがブランド形成の機会でもある。',
+    mentorId: null,
+    triggerConditions: { minLevel: 10 },
+    weight: 2,
+    choices: [
+      {
+        key: 'A',
+        text: '広報と連携し、社のメッセージと自分の発信を両立させる',
+        quality: 'optimal',
+        isOptimal: true,
+        effects: { comm: 5, mgmt: 3, exp: 220 },
+      },
+      {
+        key: 'B',
+        text: '個人の見解として遠慮なく語り、共感を呼ぶ',
+        quality: 'good',
+        effects: { comm: 4, exp: 130 },
+      },
+      {
+        key: 'C',
+        text: '無難な内容で済ませ、リスクを取らない',
+        quality: 'average',
+        effects: { comm: 2, exp: 90 },
+      },
+      {
+        key: 'D',
+        text: '辞退する。本業優先。',
+        quality: 'suboptimal',
+        effects: { exp: 60 },
+      },
+    ],
+  },
+  {
+    id: 'EVT-058',
+    category: 'hidden',
+    title: '生成 AI に「自分の仕事は奪われるか？」と問う',
+    description:
+      '深夜、ふと AI に「テスターの未来」を問いかける。\n返ってきたのは想像以上に冷静な分析。\n自分の立ち位置を見つめ直す機会。',
+    mentorId: null,
+    triggerConditions: { minLevel: 6 },
+    weight: 3,
+    choices: [
+      {
+        key: 'A',
+        text: 'AI が代替できる部分と人間に残る価値を整理し、自分のロードマップを書き直す',
+        quality: 'optimal',
+        isOptimal: true,
+        effects: { ai: 5, analysis: 4, exp: 220 },
+      },
+      {
+        key: 'B',
+        text: 'AI に置き換えられない強み（判断、責任、共感）を意識的に伸ばす',
+        quality: 'good',
+        effects: { comm: 3, analysis: 2, exp: 130 },
+      },
+      {
+        key: 'C',
+        text: '「いずれそうなる」と諦観し、目の前の仕事に戻る',
+        quality: 'average',
+        effects: { exp: 90 },
+      },
+      {
+        key: 'D',
+        text: 'AI を批判するブログを書いて鬱憤を晴らす',
+        quality: 'poor',
+        effects: { comm: -1, exp: 30 },
+      },
+    ],
+  },
 ];
 
 export function findEvent(id: string): GameEvent | undefined {

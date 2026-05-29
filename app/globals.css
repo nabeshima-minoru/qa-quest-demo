@@ -166,3 +166,18 @@ h6 {
 .qa-boss-defeated {
   animation: qa-boss-defeated-anim .8s ease-out forwards;
 }
+
+/*──────────────────────────────────────
+  COPYRIGHT WATERMARK
+──────────────────────────────────────*/
+.qa-copyright {
+  color: var(--text-3);
+  background: linear-gradient(
+    to top,
+    rgba(251, 247, 238, 0.95) 0%,
+    rgba(251, 247, 238, 0.7) 70%,
+    transparent 100%
+  );
+  backdrop-filter: blur(2px);
+  user-select: none;
+}
