@@ -1,128 +1,89 @@
-// QA Quest — Success Mode バランス定数
+// QA Quest — デバッグ・ローグライク バランス定数
 
-import type { Stats, StatKey, RoleId, WeaponCategory, WeaponRarity } from '@/types';
-
-export interface RoleDefinition {
-  id: RoleId;
-  name: string;
-  /** 到達に必要なステータス合計 */
-  minStatSum: number;
-  /** 追加条件（任意） */
-  cond?: (stats: Stats) => boolean;
-  /** スコア寄与 */
-  score: number;
-}
+import type { CardRarity } from '@/types';
 
 export const BALANCE = {
-  /** 総週数（3章 × 12週） */
-  MAX_WEEKS: 36,
-  /** 1章あたりの週数 */
-  CHAPTER_WEEKS: 12,
-  /** ボス出現週 */
-  BOSS_WEEKS: [12, 24, 36] as const,
+  /*──────── プレイヤー ────────*/
+  PLAYER_MAX_HP: 70,
+  ENERGY_PER_TURN: 3,
+  HAND_SIZE: 5,
 
-  STAT_CAP: 100,
-  INITIAL_STATS: { tech: 25, comm: 25, analysis: 25, mgmt: 15, ai: 15 } as Stats,
+  /*──────── ステータス係数 ────────*/
+  VULNERABLE_FACTOR: 1.5, // 特定：受けるダメージ+50%
+  WEAK_FACTOR: 0.75, // 萎縮：与ダメージ-25%
 
-  // 体力（スタミナ）
-  MAX_STAMINA: 100,
-  INITIAL_STAMINA: 100,
-  /** これを下回ると不調（gain 半減＋追加体力減） */
-  LOW_STAMINA: 30,
+  /*──────── マップ ────────*/
+  TOTAL_ACTS: 3,
+  /** 各幕のボス前の行数（+ボス行） */
+  ACT_ROWS: [6, 6, 5] as const,
 
-  // 週イベント発生率
-  WEEK_EVENT_CHANCE: 0.45,
+  /*──────── 回復 ────────*/
+  REST_HEAL: 24,
+  ACT_CLEAR_HEAL: 15,
 
-  // 訓練のばらつき
-  GAIN_VARIANCE: 0.25, // ±25%
-  SLUMP_GAIN_FACTOR: 0.5,
+  /*──────── 報酬 ────────*/
+  REWARD_CHOICES: 3,
+  RARITY_WEIGHTS: { N: 60, R: 32, SR: 8 } as Record<CardRarity, number>,
+  /** エリート・ボス報酬はレア以上 */
+  ELITE_RARITY_WEIGHTS: { N: 0, R: 75, SR: 25 } as Record<CardRarity, number>,
 
-  // 武器
-  WEAPON_MAX_LEVEL: 5,
-  /** 武器レベルごとの威力倍率（power × (1 + (lv-1)*PER_LEVEL)） */
-  WEAPON_POWER_PER_LEVEL: 0.22,
-  /** 所持中パッシブのレベル倍率 */
-  WEAPON_PASSIVE_PER_LEVEL: 0.5,
-
-  // バトル
-  PLAYER_MAX_MENTAL: 100,
-  /** ダメージ = power + scaleStat × SCALE */
-  BATTLE_STAT_SCALE: 0.55,
-  /** 相性一致時のダメージ倍率 */
-  AFFINITY_BONUS: 1.7,
-  /** 相性一致時に軽減される被ダメ割合（0.25 = 25%だけ受ける） */
-  MATCH_MENTAL_FACTOR: 0.25,
-  /** 不一致時の被ダメ割合 */
-  MISS_MENTAL_FACTOR: 1.0,
-
-  // ロール（アバター見た目・スコア用）— ステータス合計で判定
-  ROLES: [
-    { id: 'tester', name: 'テスター', minStatSum: 0, score: 30 },
-    { id: 'test_leader', name: 'テストリーダー', minStatSum: 165, score: 50 },
-    { id: 'test_manager', name: 'テストマネージャー', minStatSum: 235, score: 65 },
-    {
-      id: 'consultant',
-      name: 'コンサルタント',
-      minStatSum: 295,
-      cond: (s) => s.tech >= 60 && s.comm >= 50,
-      score: 78,
-    },
-    {
-      id: 'director',
-      name: '部長',
-      minStatSum: 350,
-      cond: (s) => s.mgmt >= 60,
-      score: 88,
-    },
-    {
-      id: 'ceo',
-      name: '社長',
-      minStatSum: 410,
-      cond: (s) => Object.values(s).every((v) => v >= 60),
-      score: 100,
-    },
-  ] as RoleDefinition[],
-
-  // 最終スコアの重み
-  SCORE_WEIGHTS: { growth: 0.35, battle: 0.35, collection: 0.15, role: 0.15 },
-
-  // ランク境界
-  RANK_THRESHOLDS: { S: 88, A: 76, B: 64, C: 50 },
+  /*──────── スコア ────────*/
+  RANK_THRESHOLDS: { S: 90, A: 75, B: 60, C: 45 },
+  SCORE_WEIGHTS: {
+    progress: 0.4, // 到達フロア
+    hp: 0.2, // 生還時の残メンタル
+    hunt: 0.25, // 退治したバグ数
+    deck: 0.15, // デッキの充実度
+  },
 } as const;
 
-export const STAT_LABELS: Record<StatKey, string> = {
-  tech: '技術力',
-  comm: 'コミュニケーション',
-  analysis: '分析力',
-  mgmt: 'マネジメント',
-  ai: 'AI 活用',
-};
-
-export const STAT_COLORS: Record<StatKey, string> = {
-  tech: 'var(--st-tech)',
-  comm: 'var(--st-comm)',
-  analysis: 'var(--st-anal)',
-  mgmt: 'var(--st-mgmt)',
-  ai: 'var(--st-ai)',
-};
-
-/*──────────────────────────────────────
-  武器カテゴリの表示メタ
-──────────────────────────────────────*/
-export const WEAPON_CATEGORY_META: Record<
-  WeaponCategory,
-  { label: string; short: string; color: string }
+/** カードタイプの表示メタ */
+export const CARD_TYPE_META: Record<
+  'attack' | 'skill' | 'power',
+  { label: string; color: string }
 > = {
-  knowledge: { label: '知識', short: 'KNW', color: 'var(--st-anal)' },
-  tech: { label: '技術', short: 'TEC', color: 'var(--st-tech)' },
-  connection: { label: '人脈', short: 'CNN', color: 'var(--st-comm)' },
+  attack: { label: '攻勢', color: 'var(--accent)' },
+  skill: { label: '技巧', color: 'var(--info)' },
+  power: { label: '体制', color: 'var(--brass)' },
 };
 
-export const RARITY_META: Record<
-  WeaponRarity,
-  { label: string; color: string; rank: number }
-> = {
-  N: { label: 'N', color: 'var(--text-3)', rank: 1 },
-  R: { label: 'R', color: 'var(--st-tech)', rank: 2 },
-  SR: { label: 'SR', color: 'var(--brass)', rank: 3 },
+export const RARITY_META: Record<CardRarity, { label: string; color: string }> = {
+  N: { label: 'N', color: 'var(--text-3)' },
+  R: { label: 'R', color: 'var(--info)' },
+  SR: { label: 'SR', color: 'var(--brass)' },
 };
+
+/** ノード種別の表示メタ */
+export const NODE_META = {
+  battle: { glyph: '虫', label: 'バグ退治', color: 'var(--st-tech)' },
+  elite: { glyph: '鬼', label: '強敵', color: 'var(--danger)' },
+  event: { glyph: '談', label: 'できごと', color: 'var(--st-ai)' },
+  study: { glyph: '学', label: '勉強会', color: 'var(--st-anal)' },
+  rest: { glyph: '休', label: '休憩', color: 'var(--success)' },
+  boss: { glyph: '主', label: '大障害', color: 'var(--accent)' },
+} as const;
+
+/** 幕のテーマ */
+export const ACT_META = [
+  {
+    act: 1,
+    name: '第一幕',
+    title: '開発初期',
+    subtitle: '小さなバグが芽吹く頃',
+    color: 'var(--st-tech)',
+  },
+  {
+    act: 2,
+    name: '第二幕',
+    title: 'テストフェーズ',
+    subtitle: '仕様の穴が牙を剥く',
+    color: 'var(--st-anal)',
+  },
+  {
+    act: 3,
+    name: '第三幕',
+    title: 'リリース前夜',
+    subtitle: '最後の大障害が待つ',
+    color: 'var(--accent)',
+  },
+] as const;

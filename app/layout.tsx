@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'QA Quest — テスター育成シミュレーション',
-  description: 'JSTQB と現場感を組み込んだテスター育成ゲームの社内デモ版',
+  title: 'QA Quest — デバッグ・ローグライク',
+  description: 'QA 技法のカードでバグの妖怪を退治するローグライク。社内デモ版',
 };
 
 const COPYRIGHT_YEAR = new Date().getFullYear();

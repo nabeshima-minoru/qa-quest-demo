@@ -1,240 +1,280 @@
-// QA Quest — Success Mode 共通型定義
-// 「パワプロ サクセス」風：週単位の訓練で武器(知識/技術/人脈)を集め、章末ボスと武器コマンドバトル。
-
 /*──────────────────────────────────────
-  基本ステータス
+  QA QUEST — デバッグ・ローグライク 型定義
+  プレイヤー=QAテスター / 敵=バグ / カード=QA技法
 ──────────────────────────────────────*/
-export type StatKey = 'tech' | 'comm' | 'analysis' | 'mgmt' | 'ai';
-export type Stats = Record<StatKey, number>;
 
-/** プレイヤーの到達ロール（アバターの見た目に反映） */
-export type RoleId =
-  | 'tester'
-  | 'test_leader'
-  | 'test_manager'
-  | 'consultant'
-  | 'director'
-  | 'ceo';
+/*──────────── カード ────────────*/
 
-/*──────────────────────────────────────
-  キャリアルート（開始時ボーナス）
-──────────────────────────────────────*/
-export interface Route {
+export type CardType = 'attack' | 'skill' | 'power';
+export type CardRarity = 'N' | 'R' | 'SR';
+export type CardTarget = 'single' | 'all' | 'random' | 'none';
+
+/** カードの効果パラメータ（エンジンが解釈する） */
+export interface CardEffects {
+  damage?: number;
+  hits?: number;
+  target?: CardTarget;
+  block?: number;
+  draw?: number;
+  energyGain?: number;
+  heal?: number;
+  /** 敵に付与：特定（受けるダメージ+50%）ターン数 */
+  vulnerable?: number;
+  /** 敵に付与：萎縮（与ダメージ-25%）ターン数 */
+  weak?: number;
+  /** 自分に付与：集中（次の攻撃+N、使用で消費） */
+  focus?: number;
+  /** X コスト（残り工数をすべて消費し、damage × X） */
+  xCost?: boolean;
+  /** パワー：ターン開始時の自動効果に加算 */
+  autoDamage?: number;
+  autoDraw?: number;
+  autoBlock?: number;
+  /** 使用後に消滅 */
+  exhaust?: boolean;
+}
+
+export interface CardDef {
   id: string;
   name: string;
-  description?: string;
-  initialBonus: Partial<Stats>;
-}
-
-/*──────────────────────────────────────
-  武器カード（知識・技術・人脈）
-──────────────────────────────────────*/
-export type WeaponCategory = 'knowledge' | 'tech' | 'connection';
-export type WeaponRarity = 'N' | 'R' | 'SR';
-
-export interface Weapon {
-  id: string;
-  name: string;
-  category: WeaponCategory;
-  rarity: WeaponRarity;
-  /** フレーバー（QA 的な意味づけ） */
-  flavor: string;
-  /** 所持中に常時加算されるステータス補正 */
-  passive: Partial<Stats>;
-  /** バトル時の基礎ダメージ */
-  power: number;
-  /** ダメージがスケールするステータス */
-  scaleStat: StatKey;
-  /** カードに表示する短いシンボル（1〜2文字） */
-  glyph: string;
-}
-
-/** 所持武器（重複取得でレベルが上がり威力UP） */
-export interface OwnedWeapon {
-  id: string;
-  level: number;
-}
-
-/*──────────────────────────────────────
-  訓練コマンド
-──────────────────────────────────────*/
-export type TrainingTheme = 'tech' | 'study' | 'analysis' | 'social' | 'mgmt' | 'rest';
-
-export interface TrainingCommand {
-  id: string;
-  name: string;
-  theme: TrainingTheme;
-  description: string;
-  /** 体力消費（休養はマイナス＝回復） */
-  staminaCost: number;
-  /** 基礎ステータス上昇（体力・乱数で増減） */
-  gains: Partial<Stats>;
-  /** 武器ドロップ候補（カテゴリで絞る用途）。空なら全体プールから */
-  weaponCategories?: WeaponCategory[];
-  /** 武器を獲得する確率 0..1 */
-  dropChance: number;
-  /** カード表示シンボル */
-  glyph: string;
-  /** テーマ色（CSS 変数 or hex） */
-  accent: string;
-}
-
-/*──────────────────────────────────────
-  週イベント（ランダム / good・bad）
-──────────────────────────────────────*/
-export type WeekEventTone = 'good' | 'bad' | 'fortune' | 'choice';
-
-export interface WeekEventOutcome {
-  /** 結果メッセージ */
-  message: string;
-  /** ステータス増減 */
-  stats?: Partial<Stats>;
-  /** 体力増減 */
-  stamina?: number;
-  /** 付与する武器 ID（任意） */
-  grantWeaponId?: string;
-}
-
-export interface WeekEventChoice {
-  key: 'A' | 'B';
-  label: string;
-  outcome: WeekEventOutcome;
-}
-
-export interface WeekEvent {
-  id: string;
-  tone: WeekEventTone;
-  title: string;
-  description: string;
-  /** tone !== 'choice' の場合の即時結果 */
-  outcome?: WeekEventOutcome;
-  /** tone === 'choice' の場合の選択肢 */
-  choices?: WeekEventChoice[];
-  /** 出現重み */
-  weight: number;
-}
-
-/*──────────────────────────────────────
-  週リザルト（1週間の解決結果）
-──────────────────────────────────────*/
-export interface WeekResolution {
-  week: number;
-  trainingId: string;
-  trainingName: string;
-  /** 実際に適用されたステータス増減 */
-  statDelta: Partial<Stats>;
-  staminaDelta: number;
-  /** 体力不足などで不調だったか */
-  slump: boolean;
-  /** 訓練で獲得した武器（あれば） */
-  gainedWeaponId: string | null;
-  /** 既存武器のレベルアップだったか */
-  weaponLevelUp: boolean;
-  /** 発生した週イベント（あれば） */
-  event: WeekEvent | null;
-  /** イベントが選択式で未解決なら true */
-  eventPending: boolean;
-  /** 解決済みイベントの結果メッセージ */
-  eventResult: WeekEventOutcome | null;
-}
-
-/*──────────────────────────────────────
-  ボス（武器コマンドバトル）
-──────────────────────────────────────*/
-export type BossArchetype = 'dev_lead' | 'backend_lead' | 'product_mgr' | 'cto';
-
-export interface BossDemand {
-  /** 無理難題のセリフ */
+  type: CardType;
+  rarity: CardRarity;
+  cost: number; // xCost のときは表示用に -1
+  glyph: string; // 1〜2文字の漢字シンボル
   text: string;
-  /** 効果的（特効）な武器カテゴリ */
-  weakCategory: WeaponCategory;
-  /** 対処に失敗したときプレイヤーが受けるメンタルダメージ */
-  mentalDamage: number;
+  upgradeText: string;
+  flavor: string;
+  effects: CardEffects;
+  /** 強化時に上書きされる効果（コスト変更は upgradeCost） */
+  upgraded: Partial<CardEffects>;
+  upgradeCost?: number;
 }
 
-export interface SuccessBoss {
+/** デッキ内のカード実体 */
+export interface CardInstance {
+  uid: string;
+  defId: string;
+  upgraded: boolean;
+}
+
+/*──────────── 敵（バグ） ────────────*/
+
+export type SpriteKind =
+  | 'blob'      // ヌルポ：丸いアメーバ
+  | 'mite'      // タイポ：小さなダニ
+  | 'glitch'    // 表示崩れ：ズレた四角
+  | 'crab'      // オフバイワン：カニ
+  | 'slime'     // メモリリーク：膨らむスライム
+  | 'ghost'     // 再現困難バグ：半透明の幽霊
+  | 'moji'      // 文字化け：崩れた文字塊
+  | 'knot'      // デッドロック/循環参照：絡まった結び目
+  | 'spider'    // インジェクション：注射針グモ
+  | 'golem'     // レガシーコード：石のゴーレム
+  | 'oni';      // ボス：鬼面
+
+export type EnemyMoveKind = 'attack' | 'block' | 'buff' | 'debuff' | 'big';
+
+export interface EnemyMove {
+  key: string;
+  label: string;
+  kind: EnemyMoveKind;
+  damage?: number;
+  hits?: number;
+  block?: number;
+  /** 自分（または味方全体）に筋力：与ダメ+N 永続 */
+  strength?: number;
+  strengthAll?: boolean;
+  /** プレイヤーに萎縮（与ダメ-25%）を付与するターン数 */
+  weakPlayer?: number;
+}
+
+export interface EnemyDef {
   id: string;
-  archetype: BossArchetype;
   name: string;
-  title: string;
-  /** 第何章のボスか (1..3) */
-  chapter: number;
-  /** 登場週 (12/24/36) */
-  week: number;
+  title?: string;
+  hpRange: [number, number];
+  sprite: SpriteKind;
+  color: string; // メインカラー（CSS color）
+  scale?: number; // 表示倍率（1 = 標準）
+  moves: EnemyMove[];
+  /** HP半分以下で切り替わる行動パターン（ボス用） */
+  enrageMoves?: EnemyMove[];
+  flavor: string;
+}
+
+export interface EnemyInstance {
+  uid: string;
+  defId: string;
+  hp: number;
   maxHp: number;
-  themeColor: string;
-  intro: string;
-  victory: string;
-  /** プレイヤー敗北（撤退）時 */
-  defeat: string;
-  /** 難題のループ */
-  demands: BossDemand[];
+  block: number;
+  vulnerable: number; // 残ターン
+  weak: number; // 残ターン
+  strength: number; // 永続加算
+  moveIndex: number;
+  enraged: boolean;
+  /** 次に使う行動（インテント表示用） */
+  nextMove: EnemyMove;
+  dead: boolean;
 }
 
-/*──────────────────────────────────────
-  バトル状態
-──────────────────────────────────────*/
-export interface BattleLogEntry {
-  turn: number;
-  weaponId: string;
-  weaponName: string;
-  matched: boolean;
-  damageDealt: number;
-  mentalTaken: number;
-}
+/*──────────── バトル ────────────*/
 
-export interface BattlePending {
-  weaponId: string;
-  weaponName: string;
-  matched: boolean;
-  damageDealt: number;
-  mentalTaken: number;
-  reaction: string;
+export type BattlePhase = 'player' | 'enemy' | 'won' | 'lost';
+
+/** 演出イベント：UI が浮遊ダメージ等を描画するために消費 */
+export interface FxEvent {
+  id: number;
+  kind: 'damage' | 'block' | 'heal' | 'status' | 'enemyAttack' | 'death';
+  /** 'player' またはエネミー uid */
+  target: string;
+  amount?: number;
+  label?: string;
 }
 
 export interface BattleState {
-  bossId: string;
-  chapter: number;
-  bossHp: number;
-  bossMaxHp: number;
-  playerMental: number;
-  playerMaxMental: number;
-  /** 現在のターン（1-index） */
+  enemies: EnemyInstance[];
+  hand: CardInstance[];
+  drawPile: CardInstance[];
+  discardPile: CardInstance[];
+  exhaustPile: CardInstance[];
+  energy: number;
+  maxEnergy: number;
+  block: number;
+  focus: number;
+  playerWeak: number;
   turn: number;
-  /** 現在提示中の demand index */
-  demandIndex: number;
-  log: BattleLogEntry[];
-  /** 直近アクションの演出待ち（null=入力待ち） */
-  pending: BattlePending | null;
-  result: 'win' | 'lose' | null;
+  phase: BattlePhase;
+  /** 敵ターン処理中：次に行動する敵 index */
+  enemyCursor: number;
+  /** パワー累積 */
+  powers: { autoDamage: number; autoDraw: number; autoBlock: number };
+  fx: FxEvent[];
+  fxCounter: number;
+  isElite: boolean;
+  isBoss: boolean;
 }
 
-/** 章末総括・最終結果用に保持するバトル結果サマリ */
-export interface BattleResult {
-  bossId: string;
-  chapter: number;
-  result: 'win' | 'lose';
-  bossMaxHp: number;
-  remainingBossHp: number;
-  remainingMental: number;
-  playerMaxMental: number;
-  turnsTaken: number;
+/*──────────── マップ ────────────*/
+
+export type NodeKind = 'battle' | 'elite' | 'event' | 'study' | 'rest' | 'boss';
+
+export interface MapNode {
+  id: string;
+  row: number;
+  col: number;
+  kind: NodeKind;
+  /** 次の行で進める node id */
+  next: string[];
 }
 
-/*──────────────────────────────────────
-  最終スコア
-──────────────────────────────────────*/
+export interface ActMap {
+  act: number;
+  rows: number;
+  nodes: MapNode[];
+}
+
+/*──────────── イベント ────────────*/
+
+export interface EventChoiceEffect {
+  heal?: number;
+  damage?: number;
+  maxHp?: number;
+  /** 指定レアリティのランダムカードを獲得 */
+  addCardRarity?: CardRarity;
+  /** カード1枚を選んで強化（ピッカーを開く） */
+  upgradePick?: boolean;
+  /** カード1枚を選んで除去（ピッカーを開く） */
+  removePick?: boolean;
+  /** ランダム1枚を別カードに変化 */
+  transformRandom?: boolean;
+  /** 通常のカード報酬（3択）を開く */
+  rewardCards?: boolean;
+}
+
+export interface EventChoice {
+  label: string;
+  detail: string;
+  effect: EventChoiceEffect;
+}
+
+export interface RunEventDef {
+  id: string;
+  name: string;
+  glyph: string;
+  text: string;
+  choices: EventChoice[];
+}
+
+/*──────────── 昇進パーク ────────────*/
+
+export interface PerkDef {
+  id: string;
+  name: string;
+  role: string; // 演出用の肩書き
+  glyph: string;
+  text: string;
+  effect: {
+    maxHp?: number;
+    healToFull?: boolean;
+    heal?: number;
+    /** 戦闘開始時ブロック */
+    battleStartBlock?: number;
+    /** 戦闘開始時集中 */
+    battleStartFocus?: number;
+    /** 毎ターンの手札+1 */
+    extraDraw?: number;
+    /** カード報酬の SR 出現率2倍 */
+    srLuck?: boolean;
+  };
+}
+
+/*──────────── アーキタイプ（開始デッキ） ────────────*/
+
+export interface ArchetypeDef {
+  id: string;
+  name: string;
+  description: string;
+  glyph: string;
+  color: string;
+  /** [defId, upgraded] の配列 */
+  deck: Array<[string, boolean]>;
+}
+
+/*──────────── ラン進行 ────────────*/
+
+export type RunView =
+  | 'map'
+  | 'battle'
+  | 'reward'
+  | 'event'
+  | 'study'
+  | 'rest'
+  | 'perk';
+
+export type PickerMode = 'upgrade' | 'remove';
+
+export interface RunStats {
+  battlesWon: number;
+  bugsSquashed: number;
+  damageDealt: number;
+  cardsAdded: number;
+  floorsClimbed: number;
+}
+
 export interface ScoreResult {
   finalScore: number;
   rank: 'S' | 'A' | 'B' | 'C' | 'D';
+  victory: boolean;
   breakdown: {
-    /** ステータス成長スコア */
-    growthScore: number;
-    /** ボス撃破スコア */
-    battleScore: number;
-    /** 武器コレクションスコア */
-    collectionScore: number;
-    /** 到達ロールスコア */
-    roleScore: number;
+    progressScore: number;
+    hpScore: number;
+    huntScore: number;
+    deckScore: number;
   };
+}
+
+export interface EncounterDef {
+  /** enemy def ids（同一 id 複数可） */
+  enemies: string[];
 }
