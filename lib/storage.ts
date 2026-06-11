@@ -1,6 +1,6 @@
 // localStorage ラッパー（SSR セーフ）
 
-const STORAGE_KEY = 'qa-quest-demo:state:v3';
+const STORAGE_KEY = 'qa-quest-demo:state:v4';
 
 export function loadFromStorage<T>(): T | null {
   if (typeof window === 'undefined') return null;

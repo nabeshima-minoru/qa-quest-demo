@@ -415,6 +415,17 @@ function PlayerFx({ fx }: { fx: FxEvent[] }) {
             +{f.amount} 防
           </span>
         ))}
+      {fx
+        .filter((f) => f.target === 'player' && f.kind === 'heal')
+        .map((f) => (
+          <span
+            key={f.id}
+            className="qa-float absolute left-1/2 top-0 mono font-bold text-base"
+            style={{ color: 'var(--success)' }}
+          >
+            +{f.amount}
+          </span>
+        ))}
     </div>
   );
 }

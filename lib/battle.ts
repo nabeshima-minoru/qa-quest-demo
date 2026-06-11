@@ -114,7 +114,7 @@ export function createBattle(opts: BattleSetupOpts): BattleState {
     turn: 1,
     phase: 'player',
     enemyCursor: 0,
-    powers: { autoDamage: 0, autoDraw: 0, autoBlock: 0 },
+    powers: { autoDamage: 0, autoDraw: 0, autoBlock: 0, autoHeal: 0, autoFocus: 0 },
     fx: [],
     fxCounter: 0,
     isElite: opts.isElite,
@@ -169,9 +169,10 @@ export function attackDamage(
 
 function dealToEnemy(
   e: EnemyInstance,
-  amount: number
+  amount: number,
+  ignoreBlock = false
 ): { enemy: EnemyInstance; hpLost: number } {
-  const fromBlock = Math.min(e.block, amount);
+  const fromBlock = ignoreBlock ? 0 : Math.min(e.block, amount);
   const hpLost = Math.min(e.hp, amount - fromBlock);
   const hp = e.hp - hpLost;
   return {
@@ -187,6 +188,9 @@ export interface PlayResult {
   /** プレイ不成立（工数不足など） */
   rejected?: string;
   damageDealt: number;
+  /** ラン HP への反映分（store が適用する） */
+  heal: number;
+  selfDamage: number;
 }
 
 export function playCard(
@@ -194,14 +198,15 @@ export function playCard(
   handIndex: number,
   targetUid: string | null
 ): PlayResult {
-  if (s.phase !== 'player') return { state: s, rejected: 'not-player-turn', damageDealt: 0 };
+  if (s.phase !== 'player')
+    return { state: s, rejected: 'not-player-turn', damageDealt: 0, heal: 0, selfDamage: 0 };
   const card = s.hand[handIndex];
-  if (!card) return { state: s, rejected: 'no-card', damageDealt: 0 };
+  if (!card) return { state: s, rejected: 'no-card', damageDealt: 0, heal: 0, selfDamage: 0 };
   const eff = resolvedEffects(card);
   const cost = resolvedCost(card);
   const actualCost = eff.xCost ? s.energy : cost;
   if (!eff.xCost && cost > s.energy) {
-    return { state: s, rejected: 'no-energy', damageDealt: 0 };
+    return { state: s, rejected: 'no-energy', damageDealt: 0, heal: 0, selfDamage: 0 };
   }
 
   let state: BattleState = { ...s, energy: s.energy - actualCost };
@@ -235,7 +240,7 @@ export function playCard(
       }
       for (const t of targets) {
         const dmg = attackDamage(eff.damage, state, t);
-        const res = dealToEnemy(t, dmg);
+        const res = dealToEnemy(t, dmg, eff.ignoreBlock);
         damageDealt += res.hpLost;
         enemies = enemies.map((e) => (e.uid === t.uid ? res.enemy : e));
         fx.push({ kind: 'damage', target: t.uid, amount: dmg });
@@ -271,22 +276,26 @@ export function playCard(
     if (eff.weak) fx.push({ kind: 'status', target: 'all', label: '萎縮' });
   }
 
-  // 防御・回復・集中・工数
+  // 防御・回復・集中・工数（heal / selfDamage はランHPなので store へ返す）
   if (eff.block) {
     state = { ...state, block: state.block + eff.block };
     fx.push({ kind: 'block', target: 'player', amount: eff.block });
   }
   if (eff.focus) state = { ...state, focus: state.focus + eff.focus };
   if (eff.energyGain) state = { ...state, energy: state.energy + eff.energyGain };
+  if (eff.heal) fx.push({ kind: 'heal', target: 'player', amount: eff.heal });
+  if (eff.selfDamage) fx.push({ kind: 'damage', target: 'player', amount: eff.selfDamage });
 
   // パワー
-  if (eff.autoDamage || eff.autoDraw || eff.autoBlock) {
+  if (eff.autoDamage || eff.autoDraw || eff.autoBlock || eff.autoHeal || eff.autoFocus) {
     state = {
       ...state,
       powers: {
         autoDamage: state.powers.autoDamage + (eff.autoDamage ?? 0),
         autoDraw: state.powers.autoDraw + (eff.autoDraw ?? 0),
         autoBlock: state.powers.autoBlock + (eff.autoBlock ?? 0),
+        autoHeal: state.powers.autoHeal + (eff.autoHeal ?? 0),
+        autoFocus: state.powers.autoFocus + (eff.autoFocus ?? 0),
       },
     };
   }
@@ -308,7 +317,7 @@ export function playCard(
   if (state.enemies.every((e) => e.dead)) {
     state = { ...state, phase: 'won' };
   }
-  return { state, damageDealt };
+  return { state, damageDealt, heal: eff.heal ?? 0, selfDamage: eff.selfDamage ?? 0 };
 }
 
 /*──────────── ターン終了 → 敵ターン ────────────*/
@@ -408,6 +417,8 @@ export function stepEnemyTurn(s: BattleState): EnemyStepResult {
 export interface TurnStartResult {
   state: BattleState;
   autoDamageDealt: number;
+  /** パワーによる回復（store がラン HP へ反映） */
+  heal: number;
 }
 
 export function beginPlayerTurn(s: BattleState, extraDraw: number): TurnStartResult {
@@ -417,6 +428,7 @@ export function beginPlayerTurn(s: BattleState, extraDraw: number): TurnStartRes
     turn: s.turn + 1,
     energy: s.maxEnergy,
     block: s.powers.autoBlock, // ブロックはリセット → パワーぶん付与
+    focus: s.focus + s.powers.autoFocus,
     playerWeak: Math.max(0, s.playerWeak - 1),
     enemyCursor: 0,
     enemies: s.enemies.map((e) =>
@@ -452,6 +464,9 @@ export function beginPlayerTurn(s: BattleState, extraDraw: number): TurnStartRes
   if (state.powers.autoBlock > 0) {
     fx.push({ kind: 'block', target: 'player', amount: state.powers.autoBlock });
   }
+  if (state.powers.autoHeal > 0) {
+    fx.push({ kind: 'heal', target: 'player', amount: state.powers.autoHeal });
+  }
 
   state = drawCards(state, BALANCE.HAND_SIZE + state.powers.autoDraw + extraDraw);
   state = pushFx(state, fx);
@@ -459,5 +474,5 @@ export function beginPlayerTurn(s: BattleState, extraDraw: number): TurnStartRes
   if (state.enemies.every((e) => e.dead)) {
     state = { ...state, phase: 'won' };
   }
-  return { state, autoDamageDealt };
+  return { state, autoDamageDealt, heal: state.powers.autoHeal };
 }

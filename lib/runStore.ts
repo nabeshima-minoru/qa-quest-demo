@@ -331,8 +331,12 @@ export const useRunStore = create<RunSlice & RunActions>((set, get) => {
       const res = playCard(s.battle, handIndex, targetUid);
       if (res.rejected) return;
       const stats = { ...s.stats, damageDealt: s.stats.damageDealt + res.damageDealt };
-      if (!settleBattle(res.state, { stats })) {
-        const updated = { ...s, battle: res.state, stats };
+      // 回復・自傷をラン HP へ反映（自傷では倒れない：最低 1 残る）
+      let hp = s.hp;
+      if (res.heal) hp = Math.min(s.maxHp, hp + res.heal);
+      if (res.selfDamage) hp = Math.max(1, hp - res.selfDamage);
+      if (!settleBattle(res.state, { stats, hp })) {
+        const updated = { ...s, battle: res.state, stats, hp };
         set(updated);
         persist(updated);
       }
@@ -368,8 +372,9 @@ export const useRunStore = create<RunSlice & RunActions>((set, get) => {
           ...s.stats,
           damageDealt: s.stats.damageDealt + turn.autoDamageDealt,
         };
-        if (!settleBattle(turn.state, { hp, stats })) {
-          const updated = { ...s, hp, battle: turn.state, stats };
+        const healedHp = turn.heal > 0 ? Math.min(s.maxHp, hp + turn.heal) : hp;
+        if (!settleBattle(turn.state, { hp: healedHp, stats })) {
+          const updated = { ...s, hp: healedHp, battle: turn.state, stats };
           set(updated);
           persist(updated);
         }

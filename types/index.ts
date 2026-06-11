@@ -26,10 +26,16 @@ export interface CardEffects {
   focus?: number;
   /** X コスト（残り工数をすべて消費し、damage × X） */
   xCost?: boolean;
+  /** 攻撃が敵のブロックを無視する（貫通） */
+  ignoreBlock?: boolean;
+  /** 使用時に自分のメンタルを削る（自傷コスト。1 未満にはならない） */
+  selfDamage?: number;
   /** パワー：ターン開始時の自動効果に加算 */
   autoDamage?: number;
   autoDraw?: number;
   autoBlock?: number;
+  autoHeal?: number;
+  autoFocus?: number;
   /** 使用後に消滅 */
   exhaust?: boolean;
 }
@@ -148,7 +154,13 @@ export interface BattleState {
   /** 敵ターン処理中：次に行動する敵 index */
   enemyCursor: number;
   /** パワー累積 */
-  powers: { autoDamage: number; autoDraw: number; autoBlock: number };
+  powers: {
+    autoDamage: number;
+    autoDraw: number;
+    autoBlock: number;
+    autoHeal: number;
+    autoFocus: number;
+  };
   fx: FxEvent[];
   fxCounter: number;
   isElite: boolean;
