@@ -1,5 +1,13 @@
-// QA Quest デモ版 共通型定義
+// QA Quest — Success Mode 共通型定義
+// 「パワプロ サクセス」風：週単位の訓練で武器(知識/技術/人脈)を集め、章末ボスと武器コマンドバトル。
 
+/*──────────────────────────────────────
+  基本ステータス
+──────────────────────────────────────*/
+export type StatKey = 'tech' | 'comm' | 'analysis' | 'mgmt' | 'ai';
+export type Stats = Record<StatKey, number>;
+
+/** プレイヤーの到達ロール（アバターの見た目に反映） */
 export type RoleId =
   | 'tester'
   | 'test_leader'
@@ -8,54 +16,9 @@ export type RoleId =
   | 'director'
   | 'ceo';
 
-export type EventCategory = 'case' | 'study' | 'trouble' | 'social' | 'hidden';
-
-export type ChoiceQuality = 'optimal' | 'good' | 'average' | 'suboptimal' | 'poor';
-
-export type StatKey = 'tech' | 'comm' | 'analysis' | 'mgmt' | 'ai';
-
-export type Stats = Record<StatKey, number>;
-
-export interface ChoiceEffects {
-  tech?: number;
-  comm?: number;
-  analysis?: number;
-  mgmt?: number;
-  ai?: number;
-  wallet?: number;
-  exp?: number;
-  flag?: string;
-}
-
-export interface Choice {
-  key: 'A' | 'B' | 'C' | 'D';
-  text: string;
-  quality: ChoiceQuality;
-  isOptimal?: boolean;
-  effects: ChoiceEffects;
-}
-
-export interface TriggerConditions {
-  minLevel?: number;
-  maxLevel?: number;
-  roles?: RoleId[];
-  routes?: string[];
-  stats?: Partial<Stats>;
-  flags?: string[];
-}
-
-export interface GameEvent {
-  id: string;
-  category: EventCategory;
-  title: string;
-  description: string;
-  mentorId: string | null;
-  triggerConditions: TriggerConditions;
-  weight: number;
-  choices: Choice[];
-  quizTrigger?: boolean;
-}
-
+/*──────────────────────────────────────
+  キャリアルート（開始時ボーナス）
+──────────────────────────────────────*/
 export interface Route {
   id: string;
   name: string;
@@ -63,106 +26,215 @@ export interface Route {
   initialBonus: Partial<Stats>;
 }
 
-export interface Question {
+/*──────────────────────────────────────
+  武器カード（知識・技術・人脈）
+──────────────────────────────────────*/
+export type WeaponCategory = 'knowledge' | 'tech' | 'connection';
+export type WeaponRarity = 'N' | 'R' | 'SR';
+
+export interface Weapon {
   id: string;
-  category: string;
-  difficulty: number;
-  questionText: string;
-  choices: Array<{ key: 'A' | 'B' | 'C' | 'D'; text: string }>;
-  correctAnswer: 'A' | 'B' | 'C' | 'D';
-  explanation: string;
-  jstqbSyllabus: string;
-  timeLimitSec: number;
+  name: string;
+  category: WeaponCategory;
+  rarity: WeaponRarity;
+  /** フレーバー（QA 的な意味づけ） */
+  flavor: string;
+  /** 所持中に常時加算されるステータス補正 */
+  passive: Partial<Stats>;
+  /** バトル時の基礎ダメージ */
+  power: number;
+  /** ダメージがスケールするステータス */
+  scaleStat: StatKey;
+  /** カードに表示する短いシンボル（1〜2文字） */
+  glyph: string;
 }
 
-export interface TurnLog {
-  turn: number;
-  eventId: string;
-  eventTitle: string;
-  choiceKey: 'A' | 'B' | 'C' | 'D';
-  choiceText: string;
-  quality: ChoiceQuality;
-  expGain: number;
-  effects: ChoiceEffects;
-}
-
-export interface ScoreResult {
-  finalScore: number;
-  rank: 'S' | 'A' | 'B' | 'C' | 'D';
-  breakdown: {
-    jstqbScore: number;
-    bugQualityAvg: number;
-    choiceScore: number;
-    roleReachedScore: number;
-  };
+/** 所持武器（重複取得でレベルが上がり威力UP） */
+export interface OwnedWeapon {
+  id: string;
+  level: number;
 }
 
 /*──────────────────────────────────────
-  BOSS BATTLE
+  訓練コマンド
 ──────────────────────────────────────*/
+export type TrainingTheme = 'tech' | 'study' | 'analysis' | 'social' | 'mgmt' | 'rest';
 
-export type BossArchetype =
-  | 'dev_lead'      // 開発リーダー
-  | 'backend_lead'  // バックエンド責任者
-  | 'product_mgr'   // プロダクトマネージャー
-  | 'cto';          // CTO
+export interface TrainingCommand {
+  id: string;
+  name: string;
+  theme: TrainingTheme;
+  description: string;
+  /** 体力消費（休養はマイナス＝回復） */
+  staminaCost: number;
+  /** 基礎ステータス上昇（体力・乱数で増減） */
+  gains: Partial<Stats>;
+  /** 武器ドロップ候補（カテゴリで絞る用途）。空なら全体プールから */
+  weaponCategories?: WeaponCategory[];
+  /** 武器を獲得する確率 0..1 */
+  dropChance: number;
+  /** カード表示シンボル */
+  glyph: string;
+  /** テーマ色（CSS 変数 or hex） */
+  accent: string;
+}
 
-export interface BossChoice {
-  key: 'A' | 'B' | 'C' | 'D';
+/*──────────────────────────────────────
+  週イベント（ランダム / good・bad）
+──────────────────────────────────────*/
+export type WeekEventTone = 'good' | 'bad' | 'fortune' | 'choice';
+
+export interface WeekEventOutcome {
+  /** 結果メッセージ */
+  message: string;
+  /** ステータス増減 */
+  stats?: Partial<Stats>;
+  /** 体力増減 */
+  stamina?: number;
+  /** 付与する武器 ID（任意） */
+  grantWeaponId?: string;
+}
+
+export interface WeekEventChoice {
+  key: 'A' | 'B';
+  label: string;
+  outcome: WeekEventOutcome;
+}
+
+export interface WeekEvent {
+  id: string;
+  tone: WeekEventTone;
+  title: string;
+  description: string;
+  /** tone !== 'choice' の場合の即時結果 */
+  outcome?: WeekEventOutcome;
+  /** tone === 'choice' の場合の選択肢 */
+  choices?: WeekEventChoice[];
+  /** 出現重み */
+  weight: number;
+}
+
+/*──────────────────────────────────────
+  週リザルト（1週間の解決結果）
+──────────────────────────────────────*/
+export interface WeekResolution {
+  week: number;
+  trainingId: string;
+  trainingName: string;
+  /** 実際に適用されたステータス増減 */
+  statDelta: Partial<Stats>;
+  staminaDelta: number;
+  /** 体力不足などで不調だったか */
+  slump: boolean;
+  /** 訓練で獲得した武器（あれば） */
+  gainedWeaponId: string | null;
+  /** 既存武器のレベルアップだったか */
+  weaponLevelUp: boolean;
+  /** 発生した週イベント（あれば） */
+  event: WeekEvent | null;
+  /** イベントが選択式で未解決なら true */
+  eventPending: boolean;
+  /** 解決済みイベントの結果メッセージ */
+  eventResult: WeekEventOutcome | null;
+}
+
+/*──────────────────────────────────────
+  ボス（武器コマンドバトル）
+──────────────────────────────────────*/
+export type BossArchetype = 'dev_lead' | 'backend_lead' | 'product_mgr' | 'cto';
+
+export interface BossDemand {
+  /** 無理難題のセリフ */
   text: string;
-  damage: number;
-  reaction: string;
-  quality: 'optimal' | 'good' | 'average' | 'poor';
+  /** 効果的（特効）な武器カテゴリ */
+  weakCategory: WeaponCategory;
+  /** 対処に失敗したときプレイヤーが受けるメンタルダメージ */
+  mentalDamage: number;
 }
 
-export interface BossPhase {
-  /** ボスの要求／台詞 */
-  demand: string;
-  /** プレイヤーの回答候補 */
-  choices: BossChoice[];
-}
-
-export interface Boss {
+export interface SuccessBoss {
   id: string;
   archetype: BossArchetype;
   name: string;
   title: string;
-  /** どのマイルストーンで登場するか (10/20/30/40) */
-  milestone: number;
+  /** 第何章のボスか (1..3) */
+  chapter: number;
+  /** 登場週 (12/24/36) */
+  week: number;
   maxHp: number;
-  /** SVG テーマカラー */
   themeColor: string;
-  /** バトル開始時の挨拶 */
   intro: string;
-  /** 撃破時の捨て台詞 */
   victory: string;
-  /** 撤退（時間切れ）時の台詞 */
-  escape: string;
-  phases: BossPhase[]; // 3 phases
+  /** プレイヤー敗北（撤退）時 */
+  defeat: string;
+  /** 難題のループ */
+  demands: BossDemand[];
 }
 
-export interface BossChoiceLog {
-  phase: number; // 1-3
-  choiceKey: 'A' | 'B' | 'C' | 'D';
-  choiceText: string;
-  damage: number;
-  quality: BossChoice['quality'];
+/*──────────────────────────────────────
+  バトル状態
+──────────────────────────────────────*/
+export interface BattleLogEntry {
+  turn: number;
+  weaponId: string;
+  weaponName: string;
+  matched: boolean;
+  damageDealt: number;
+  mentalTaken: number;
 }
 
-export interface BossBattleState {
+export interface BattlePending {
+  weaponId: string;
+  weaponName: string;
+  matched: boolean;
+  damageDealt: number;
+  mentalTaken: number;
+  reaction: string;
+}
+
+export interface BattleState {
   bossId: string;
-  milestone: number;
-  hp: number;
-  maxHp: number;
-  /** 現在フェーズ 1〜3 */
-  phase: number;
-  /** 解決待ちの直近選択（次へ進む前のリアクション表示用） */
-  pending: {
-    choiceKey: BossChoice['key'];
-    damage: number;
-    reaction: string;
-    quality: BossChoice['quality'];
-  } | null;
-  log: BossChoiceLog[];
-  result: 'defeated' | 'escaped' | null;
+  chapter: number;
+  bossHp: number;
+  bossMaxHp: number;
+  playerMental: number;
+  playerMaxMental: number;
+  /** 現在のターン（1-index） */
+  turn: number;
+  /** 現在提示中の demand index */
+  demandIndex: number;
+  log: BattleLogEntry[];
+  /** 直近アクションの演出待ち（null=入力待ち） */
+  pending: BattlePending | null;
+  result: 'win' | 'lose' | null;
+}
+
+/** 章末総括・最終結果用に保持するバトル結果サマリ */
+export interface BattleResult {
+  bossId: string;
+  chapter: number;
+  result: 'win' | 'lose';
+  bossMaxHp: number;
+  remainingBossHp: number;
+  remainingMental: number;
+  playerMaxMental: number;
+  turnsTaken: number;
+}
+
+/*──────────────────────────────────────
+  最終スコア
+──────────────────────────────────────*/
+export interface ScoreResult {
+  finalScore: number;
+  rank: 'S' | 'A' | 'B' | 'C' | 'D';
+  breakdown: {
+    /** ステータス成長スコア */
+    growthScore: number;
+    /** ボス撃破スコア */
+    battleScore: number;
+    /** 武器コレクションスコア */
+    collectionScore: number;
+    /** 到達ロールスコア */
+    roleScore: number;
+  };
 }

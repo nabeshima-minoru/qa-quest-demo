@@ -13,7 +13,9 @@ interface Props {
  * 顔立ちは全ロール共通で違和感を防ぐ。
  */
 export default function PlayerAvatar({ role, size = 56 }: Props) {
-  const cfg = ROLE_CONFIG[role];
+  // 永続化された不正な role 文字列でも画面が白くならないようフォールバック。
+  const safeRole: RoleId = ROLE_CONFIG[role] ? role : 'tester';
+  const cfg = ROLE_CONFIG[safeRole];
 
   // 共通の肌色・髪色
   const skin = '#E8D2B5';
@@ -29,11 +31,11 @@ export default function PlayerAvatar({ role, size = 56 }: Props) {
     >
       <svg viewBox="0 0 200 200" width={size} height={size}>
         <defs>
-          <radialGradient id={`pa-bg-${role}`} cx="50%" cy="40%" r="65%">
+          <radialGradient id={`pa-bg-${safeRole}`} cx="50%" cy="40%" r="65%">
             <stop offset="0%" stopColor={cfg.bg} stopOpacity="0.5" />
             <stop offset="100%" stopColor={cfg.bg} stopOpacity="0.05" />
           </radialGradient>
-          <linearGradient id={`pa-cloth-${role}`} x1="0" y1="0" x2="0" y2="1">
+          <linearGradient id={`pa-cloth-${safeRole}`} x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={cfg.outfit} />
             <stop offset="100%" stopColor={darken(cfg.outfit, 0.22)} />
           </linearGradient>
@@ -44,14 +46,14 @@ export default function PlayerAvatar({ role, size = 56 }: Props) {
           cx="100"
           cy="100"
           r="98"
-          fill={`url(#pa-bg-${role})`}
+          fill={`url(#pa-bg-${safeRole})`}
           stroke={cfg.bg}
           strokeOpacity="0.55"
           strokeWidth="2"
         />
 
         {/* Body / shoulders（役職別） */}
-        <Body clothFill={`url(#pa-cloth-${role})`} accent={darken(cfg.outfit, 0.3)} cfg={cfg} />
+        <Body clothFill={`url(#pa-cloth-${safeRole})`} accent={darken(cfg.outfit, 0.3)} cfg={cfg} />
 
         {/* Neck */}
         <rect x="86" y="120" width="28" height="18" rx="4" fill={skinDark} />
@@ -64,10 +66,10 @@ export default function PlayerAvatar({ role, size = 56 }: Props) {
         <ellipse cx="138" cy="93" rx="6" ry="9" fill={skin} stroke={skinDark} strokeWidth="0.8" />
 
         {/* Hair（役職別に段々整っていく） */}
-        <Hair role={role} color={hair} highlight={hairLight} />
+        <Hair role={safeRole} color={hair} highlight={hairLight} />
 
         {/* Eyebrows — 役職が上がるほど落ち着いた角度 */}
-        <Eyebrows role={role} color={hair} />
+        <Eyebrows role={safeRole} color={hair} />
 
         {/* Eyes */}
         <g>
@@ -78,7 +80,7 @@ export default function PlayerAvatar({ role, size = 56 }: Props) {
         </g>
 
         {/* Mouth — 自信ある微笑 */}
-        <Mouth role={role} />
+        <Mouth role={safeRole} />
 
         {/* Accessories — 眼鏡など */}
         {cfg.glasses && <Glasses />}

@@ -30,9 +30,9 @@ export default function TitlePage() {
             シミュレーション
           </h1>
           <p className="text-[var(--text-2)] text-sm leading-relaxed pt-4">
-            50 ターンの選択を通じて、テスターとしてのキャリアを歩み、
+            36 週・3 章の訓練で武器（知識・技術・人脈）を集め、
             <br />
-            JSTQB の知識と現場の判断力を養う採用検査ゲーム。
+            章末ボスとの武器コマンドバトルに挑む QA 育成ゲーム。
           </p>
         </header>
 
